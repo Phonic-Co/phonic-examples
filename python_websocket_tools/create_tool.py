@@ -4,7 +4,7 @@ client = Phonic()
 
 client.tools.create(
     name="find_flights_sync",
-    description=f"Find one-way flights on a given date from an origin to a destination airport.",
+    description="Find one-way flights on a given date from an origin to a destination airport.",
     type="custom_websocket",
     execution_mode="sync",
     parameters=[
