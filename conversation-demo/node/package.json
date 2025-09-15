@@ -1,0 +1,28 @@
+{
+  "name": "phonic-conversation-demo",
+  "version": "0.2.0",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "call": "tsx src/call.ts",
+    "check": "biome check --write",
+    "ct": "bun check && bun tsc",
+    "ci": "tsc && biome ci",
+    "tunnel": "./tunnelto.sh"
+  },
+  "dependencies": {
+    "@hono/node-server": "1.16.0",
+    "@hono/node-ws": "1.2.0",
+    "dotenv": "16.5.0",
+    "phonic": "0.30.2",
+    "hono": "4.8.5",
+    "svix": "1.69.0",
+    "tsx": "4.20.3",
+    "twilio": "5.7.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.1",
+    "@flydotio/dockerfile": "0.7.10",
+    "typescript": "5.8.3"
+  }
+}

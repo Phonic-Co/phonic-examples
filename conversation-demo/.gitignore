@@ -1,0 +1,11 @@
+# deps
+node_modules/
+
+# TypeScript incremental compilation cache
+*.tsbuildinfo
+
+# Environment variables
+.env*
+
+# tunnelto.dev script
+tunnelto.sh
