@@ -1,5 +1,10 @@
 This code accompanies the guide [here](https://docs.phonic.co/guides/guides/agent_with_websocket_tools).
 
+Environment setup:
+1. `uv venv`
+2. `source .venv/bin/activate`
+3. `uv pip install -r requirements.txt`
+
 The steps to run are, after updating `constants.py`:
 1. `python create_tool.py`
 2. `python create_agent.py`
