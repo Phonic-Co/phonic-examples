@@ -1,4 +1,4 @@
-from phonic import CreateAgentRequestTemplateVariablesValue, Phonic
+from phonic import Phonic
 
 client = Phonic()
 
@@ -18,10 +18,8 @@ client.agents.create(
     system_prompt=system_prompt,
     audio_format="mulaw_8000",
     template_variables={
-        "customer_name": CreateAgentRequestTemplateVariablesValue(
-            default_value="there"
-        ),
-        "today_date": CreateAgentRequestTemplateVariablesValue(default_value=None),
+        "customer_name": {},
+        "today_date": {},
     },
     tools=["find_flights_sync"],
 )
