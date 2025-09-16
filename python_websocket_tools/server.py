@@ -1,0 +1,112 @@
+import asyncio
+
+from call_tool import get_flights
+from constants import CUSTOMER_NAME, NGROK_URL, TODAY_DATE
+from fastapi import FastAPI, Response, WebSocket
+from phonic import (AsyncPhonic, AudioChunkPayload, ToolCallOutputPayload,
+                    ToolCallPayload)
+from phonic.conversations.socket_client import \
+    ConversationsSocketClientResponse
+from phonic.types.config_payload import ConfigPayload
+from twilio.twiml.voice_response import Connect, VoiceResponse
+
+app = FastAPI()
+client = AsyncPhonic()
+
+
+@app.post("/inbound")
+async def inbound() -> Response:
+    voice_response = VoiceResponse()
+    connect = Connect()
+    connect.stream(url=f"wss://{NGROK_URL}/ws")
+    voice_response.append(connect)
+    return Response(content=str(voice_response), media_type="application/xml")
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    queue = asyncio.Queue()
+    stream_sid = None
+
+    async def handle_tool_call(message: ToolCallPayload):
+        args = message.parameters
+        flights = await asyncio.to_thread(
+            get_flights,
+            date=args["date"],
+            from_airport=args["from_airport"],
+            to_airport=args["to_airport"],
+        )
+        await queue.put(
+            ToolCallOutputPayload(
+                tool_call_id=message.tool_call_id,
+                output={"flights": flights},
+            )
+        )
+
+    async def receive_from_phonic(message: ConversationsSocketClientResponse):
+        # Handler that sends Phonic response to Twilio
+        if stream_sid is not None:
+            match message.type:
+                case "audio_chunk":
+                    sending = {
+                        "event": "media",
+                        "streamSid": stream_sid,
+                        "media": {"payload": message.audio},
+                    }
+                    await websocket.send_json(sending)
+                case "tool_call":
+                    asyncio.create_task(handle_tool_call(message))
+
+    async def send_to_phonic():
+        async with client.conversations.connect() as socket:
+            # Register the on-message handler
+            socket.on("message", receive_from_phonic)
+            asyncio.create_task(socket.start_listening())
+
+            # Send the initial config to Phonic
+            await socket.send_config(
+                ConfigPayload(
+                    agent="find-flights-sync-agent",
+                    template_variables={
+                        "customer_name": CUSTOMER_NAME,
+                        "today_date": TODAY_DATE,
+                    },
+                )
+            )
+
+            while True:
+                # Continually get audio from Twilio and send to Phonic
+                chunk = await queue.get()
+                if chunk is None:
+                    break
+                if isinstance(chunk, AudioChunkPayload):
+                    await socket.send_audio_chunk(chunk)
+                elif isinstance(chunk, ToolCallOutputPayload):
+                    await socket.send_tool_call_output(chunk)
+
+    async def handle_websocket():
+        # Start the task that sends audio to Phonic
+        process_task = asyncio.create_task(send_to_phonic())
+
+        try:
+            while True:
+                data = await websocket.receive_json()
+
+                # The first message from Twilio contains the streamSid, which is necessary
+                # for all subsequent messages to Twilio.
+                if data["event"] == "start":
+                    nonlocal stream_sid
+                    stream_sid = data["streamSid"]
+
+                if data["event"] == "media":
+                    payload = data["media"]["payload"]
+                    await queue.put(AudioChunkPayload(audio=payload))
+                if data["event"] == "closed":
+                    break
+
+        finally:
+            await queue.put(None)
+            await process_task
+
+    await handle_websocket()
