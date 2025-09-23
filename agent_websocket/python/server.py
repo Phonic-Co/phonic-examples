@@ -1,12 +1,13 @@
 import asyncio
 
-from constants import CUSTOMER_NAME, NGROK_URL, TODAY_DATE
 from fastapi import FastAPI, Response, WebSocket
 from phonic import AsyncPhonic, AudioChunkPayload
 from phonic.conversations.socket_client import \
     ConversationsSocketClientResponse
 from phonic.types.config_payload import ConfigPayload
 from twilio.twiml.voice_response import Connect, VoiceResponse
+
+from constants import NGROK_URL
 
 app = FastAPI()
 client = AsyncPhonic()
@@ -49,10 +50,6 @@ async def websocket_endpoint(websocket: WebSocket):
             await socket.send_config(
                 ConfigPayload(
                     agent="agent-websocket",
-                    template_variables={
-                        "customer_name": CUSTOMER_NAME,
-                        "today_date": TODAY_DATE,
-                    },
                 )
             )
 

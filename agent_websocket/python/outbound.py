@@ -1,8 +1,9 @@
 import os
 
-from constants import CUSTOMER_PHONE_NUMBER, NGROK_URL, TWILIO_PHONE_NUMBER
 from twilio.rest import Client
 from twilio.twiml.voice_response import Connect, VoiceResponse
+
+from constants import CUSTOMER_PHONE_NUMBER, NGROK_URL, TWILIO_PHONE_NUMBER
 
 account_sid = os.getenv("TWILIO_ACCOUNT_SID")
 auth_token = os.getenv("TWILIO_AUTH_TOKEN")
