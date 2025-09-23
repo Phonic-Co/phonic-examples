@@ -1,10 +1,17 @@
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from phonic import Phonic
 
-client = Phonic()
+load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
+
+client = Phonic(
+    api_key=os.getenv("PHONIC_API_KEY"),
+)
 
 system_prompt = """
 Be helpful, friendly, and concise.
-Today is {{today_date}}.
 You have 1 tool, called find_flights_sync.
 If you are about to call a tool, you can say something like "Just wait a moment while I look up flights".
 The result of the tool call may not sound natural if you read it directly,
@@ -13,13 +20,9 @@ For example, don't read out entire bulleted lists.
 """
 
 client.agents.create(
-    name="find-flights-sync-agent",
-    welcome_message="Hi {{customer_name}}. What flights are you interested in?",
+    name="agent-websocket-find-flights",
+    welcome_message="Hi there. What flights are you interested in?",
     system_prompt=system_prompt,
     audio_format="mulaw_8000",
-    template_variables={
-        "customer_name": {},
-        "today_date": {},
-    },
     tools=["find_flights_sync"],
 )
