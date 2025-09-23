@@ -10,6 +10,8 @@ client = Phonic(
 )
 
 client.agents.create(
-    name="my-first-agent",
-    phone_number="assign-automatically",
+    name="agent-websocket",
+    welcome_message="Hi there. How can I help you today?",
+    system_prompt="Be helpful, friendly, and concise.",
+    audio_format="mulaw_8000",
 )
