@@ -9,7 +9,7 @@ const client = new PhonicClient({
 
 async function outboundCall() {
   await client.conversations.outboundCall({
-    to_phone_number: "YOUR_PHONE_NUMBER", // e.g. +19189391262
+    to_phone_number: "YOUR_PHONE_NUMBER", // e.g. +15551234567
     config: {
       agent: "my-first-agent",
       welcome_message: "Hello, how can I help you?",
