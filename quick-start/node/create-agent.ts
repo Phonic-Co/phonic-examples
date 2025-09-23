@@ -15,4 +15,4 @@ async function createAgent() {
   });
 }
 
-createAgent();
+await createAgent();

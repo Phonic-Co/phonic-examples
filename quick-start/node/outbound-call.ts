@@ -18,4 +18,4 @@ async function outboundCall() {
   });
 }
 
-outboundCall();
+await outboundCall();
