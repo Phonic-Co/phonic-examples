@@ -1,9 +1,10 @@
 import os
+from pathlib import Path
 
 from dotenv import load_dotenv
 from phonic import Phonic
 
-load_dotenv(os.path.join(os.path.dirname(__file__), "../.env.local"))
+load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
 
 client = Phonic(
     api_key=os.getenv("PHONIC_API_KEY"),
