@@ -42,6 +42,7 @@ app.get(
           getStreamSid: () => streamSid,
           sendMessageToTwilio: (obj: unknown) => ws.send(JSON.stringify(obj)),
           config: {
+            type: "config",
             agent: "websocket-tools",
             input_format: "mulaw_8000",
             output_format: "mulaw_8000",
