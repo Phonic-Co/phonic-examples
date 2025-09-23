@@ -1,6 +1,7 @@
 import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
+import type { WSContext } from "hono/ws";
 import { type Phonic, PhonicClient } from "phonic";
 import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
 import { phonicApiKey } from "./env-vars";
@@ -31,7 +32,7 @@ app.get(
     > | null = null;
     let streamSid: string | null = null;
 
-    const sendToTwilio = (ws: any, data: any) => {
+    const sendToTwilio = (ws: WSContext, data: unknown) => {
       ws.send(JSON.stringify(data));
     };
 

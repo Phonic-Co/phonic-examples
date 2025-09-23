@@ -67,7 +67,10 @@ app.post("/webhooks/add-destination", async (c) => {
   const destinationName = c.req.query("destination_name");
 
   // Do something with the destination name
-  console.log("add-destination webhook tool called for destination:", destinationName);
+  console.log(
+    "add-destination webhook tool called for destination:",
+    destinationName,
+  );
 
   return c.json({
     success: true,
