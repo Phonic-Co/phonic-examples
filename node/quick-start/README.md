@@ -1,3 +1,13 @@
+
+# Quick Start example
+
+This example walks you through creating a simple agent and making both outbound and inbound calls. It complements the [Quick Start guide](https://docs.phonic.co/guides/quick_start).
+
+## 📋 Prerequisites
+
+- [Node.js](https://nodejs.org) (v22 or higher recommended)
+- [Phonic](https://phonic.co) API key for voice processing
+
 ## 🚀 Quick Start
 
 ### 1. Clone and Install
@@ -12,6 +22,7 @@ npm install
 
 1. Obtain a Phonic API Key by visiting the [Phonic API Keys](https://phonic.co/api-keys) page and creating an API key.
 2. Create an `.env.local` file in the example root with the following content:
+
 ```dotenv
 PHONIC_API_KEY="your_api_key"
 ```
@@ -33,3 +44,7 @@ npm run quick-start:outbound-call
 ### 5. Make an inbound call
 
 Grab the agent's phone number on the [Agents page](https://phonic.co/agents), and give it a call!
+
+## 📄 License
+
+[MIT](../../LICENSE)

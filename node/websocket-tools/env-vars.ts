@@ -8,8 +8,6 @@ if (!phonicApiKey) {
   throw new Error("PHONIC_API_KEY environment variable is not set");
 }
 
-const phonicApiBaseUrl = process.env.PHONIC_API_BASE_URL;
-
 const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID as string;
 
 if (!twilioAccountSid) {
@@ -22,4 +20,4 @@ if (!twilioAuthToken) {
   throw new Error("TWILIO_AUTH_TOKEN environment variable is not set");
 }
 
-export { phonicApiBaseUrl, phonicApiKey, twilioAccountSid, twilioAuthToken };
+export { phonicApiKey, twilioAccountSid, twilioAuthToken };

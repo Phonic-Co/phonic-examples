@@ -1,7 +1,9 @@
 import asyncio
+import os
+from pathlib import Path
 
 from call_tool import get_flights
-from constants import CUSTOMER_NAME, NGROK_URL, TODAY_DATE
+from dotenv import load_dotenv
 from fastapi import FastAPI, Response, WebSocket
 from phonic import (AsyncPhonic, AudioChunkPayload, ToolCallOutputPayload,
                     ToolCallPayload)
@@ -9,6 +11,8 @@ from phonic.conversations.socket_client import \
     ConversationsSocketClientResponse
 from phonic.types.config_payload import ConfigPayload
 from twilio.twiml.voice_response import Connect, VoiceResponse
+
+load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
 
 app = FastAPI()
 client = AsyncPhonic()
@@ -18,7 +22,7 @@ client = AsyncPhonic()
 async def inbound() -> Response:
     voice_response = VoiceResponse()
     connect = Connect()
-    connect.stream(url=f"wss://{NGROK_URL}/ws")
+    connect.stream(url=f"wss://{os.environ['NGROK_URL']}/ws")
     voice_response.append(connect)
     return Response(content=str(voice_response), media_type="application/xml")
 
@@ -67,11 +71,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Send the initial config to Phonic
             await socket.send_config(
                 ConfigPayload(
-                    agent="find-flights-sync-agent",
-                    template_variables={
-                        "customer_name": CUSTOMER_NAME,
-                        "today_date": TODAY_DATE,
-                    },
+                    agent="agent-websocket-find-flights",
                 )
             )
 
