@@ -1,9 +1,7 @@
 import { Phonic, type PhonicSTSConfig } from "phonic";
 import { phonicApiBaseUrl, phonicApiKey } from "./env-vars";
 
-const phonic = new Phonic(phonicApiKey, {
-  baseUrl: phonicApiBaseUrl || "https://api.phonic.co",
-});
+const phonic = new Phonic(phonicApiKey);
 
 export const setupPhonic = ({
   getStreamSid,
