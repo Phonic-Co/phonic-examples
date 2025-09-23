@@ -33,6 +33,8 @@ npm run create-agent
 
 ### 4. Make an outbound call
 
+Open `outbound-call.ts`, update `YOUR_PHONE_NUMBER` to your phone number, and run:
+
 ```bash
 npm run outbound-call
 ```
