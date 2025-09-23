@@ -13,7 +13,7 @@ This example walks you through creating a simple agent and making both outbound 
 
 ```bash
 git clone https://github.com/Phonic-Co/phonic-examples
-cd phonic-examples/quick-start/node
+cd phonic-examples/node/quick-start
 npm install
 ```
 
