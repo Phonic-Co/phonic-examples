@@ -1,0 +1,27 @@
+{
+  "name": "phonic-examples-quick-start",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "quick-start/create-agent": "tsx quick-start/create-agent.ts",
+    "quick-start/outbound-call": "tsx quick-start/outbound-call.ts",
+    "websocket-tools/create-tools": "tsx websocket-tools/create-tools.ts",
+    "websocket-tools/create-agent": "tsx websocket-tools/create-agent.ts",
+    "check": "biome check --write",
+    "ct": "npm run check && npx tsc"
+  },
+  "dependencies": {
+    "@hono/node-server": "1.17.1",
+    "@hono/node-ws": "1.2.0",
+    "dotenv": "16.5.0",
+    "hono": "4.8.5",
+    "phonic": "0.30.8",
+    "tsx": "4.20.3",
+    "twilio": "5.7.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@types/node": "24.5.2",
+    "typescript": "5.9.2"
+  }
+}

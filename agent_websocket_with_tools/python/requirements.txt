@@ -1,4 +1,0 @@
-fastapi[standard]==0.116.1
-fast-flights==2.2
-phonic>=0.30.4
-twilio==9.8.0
