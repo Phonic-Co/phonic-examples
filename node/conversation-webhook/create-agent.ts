@@ -12,7 +12,7 @@ const client = new PhonicClient({ apiKey });
 
 async function createTool() {
   await client.tools.create({
-    name: "add_destination_1",
+    name: "add_destination",
     description: "Get the weather for a city",
     type: "custom_webhook",
     execution_mode: "sync",
