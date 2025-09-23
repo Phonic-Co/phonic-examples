@@ -84,7 +84,6 @@ async def websocket_endpoint(websocket: WebSocket):
                     await socket.send_audio_chunk(chunk)
                 elif isinstance(chunk, ToolCallOutputPayload):
                     await socket.send_tool_call_output(chunk)
-                await socket.send_audio_chunk(chunk)
 
     async def handle_websocket():
         # Start the task that sends audio to Phonic
