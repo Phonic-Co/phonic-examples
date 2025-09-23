@@ -52,6 +52,7 @@ app.post("/webhooks/events", async (c) => {
       "svix-signature": c.req.header("svix-signature") ?? "",
     });
 
+    // Do something with the payload
     console.log("Events webhook payload:", payload);
 
     return c.text("OK", 200);
@@ -64,6 +65,8 @@ app.post("/webhooks/events", async (c) => {
 
 app.post("/webhooks/add-destination", async (c) => {
   const destinationName = c.req.query("destination_name");
+
+  // Do something with the destination name
   console.log("add-destination webhook tool called for destination:", destinationName);
 
   return c.json({
