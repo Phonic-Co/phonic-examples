@@ -1,5 +1,5 @@
 [project]
-name = "phonic-python-examplesa"
+name = "phonic-examples-python"
 version = "0.1.0"
 description = "Phonic Python Examples"
 readme = "README.md"
