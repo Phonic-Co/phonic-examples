@@ -33,9 +33,51 @@ app.get(
     > | null = null;
     let streamSid: string | null = null;
     let callSid: string | null = null;
+    let userFinishedSpeakingTimestamp = performance.now();
+    let isFirstAudioChunk = true;
 
     const sendToTwilio = (ws: any, data: any) => {
       ws.send(JSON.stringify(data));
+    };
+
+    const handleToolCall = async ({
+      toolCallId,
+      toolName,
+      parameters,
+    }: {
+      toolCallId: string;
+      toolName: string;
+      parameters: Record<string, unknown>;
+    }) => {
+      console.log(
+        "Tool call:",
+        JSON.stringify({ toolCallId, toolName, parameters }, null, 2),
+      );
+
+      switch (toolName) {
+        case "current_time": {
+          phonicSocket?.sendToolCallOutput({
+            type: "tool_call_output",
+            tool_call_id: toolCallId,
+            output: "4:15 PM",
+          });
+          break;
+        }
+
+        case "current_temperature": {
+          await new Promise((resolve) => setTimeout(resolve, 3000));
+
+          phonicSocket?.sendToolCallOutput({
+            type: "tool_call_output",
+            tool_call_id: toolCallId,
+            output: {
+              temperature: "75 degrees Fahrenheit",
+            },
+          });
+
+          break;
+        }
+      }
     };
 
     return {
@@ -47,7 +89,44 @@ app.get(
             if (!streamSid) return;
 
             switch (message.type) {
+              case "input_text":
+                console.log(`\n\nUser: ${message.text}`);
+                isFirstAudioChunk = true;
+                break;
+
+              case "user_started_speaking":
+                console.log("User started speaking");
+                break;
+
+              case "user_finished_speaking":
+                userFinishedSpeakingTimestamp = performance.now();
+                break;
+
+              case "tool_call":
+                handleToolCall({
+                  toolCallId: message.tool_call_id,
+                  toolName: message.tool_name,
+                  parameters: message.parameters,
+                });
+                break;
+
               case "audio_chunk":
+                if (isFirstAudioChunk) {
+                  console.log(
+                    "\nTTFB:",
+                    Math.round(
+                      performance.now() - userFinishedSpeakingTimestamp,
+                    ),
+                    "ms",
+                  );
+                  process.stdout.write("Assistant: ");
+                  isFirstAudioChunk = false;
+                }
+
+                if (message.text !== "") {
+                  process.stdout.write(message.text);
+                }
+
                 sendToTwilio(ws, {
                   event: "media",
                   streamSid: streamSid,
@@ -85,7 +164,7 @@ app.get(
 
           await phonicSocket.sendConfig({
             type: "config",
-            agent: "agent-websocket",
+            agent: "agent-websocket-tools",
             input_format: "mulaw_8000",
             output_format: "mulaw_8000",
           } as Phonic.ConfigPayload);
