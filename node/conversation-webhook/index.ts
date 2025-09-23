@@ -35,7 +35,6 @@ app.post("/webhooks/phonic-config", async (c) => {
 });
 
 app.post("/webhooks/events", async (c) => {
-  console.log(phonicWebhookSecret);
   if (!phonicWebhookSecret) {
     return c.text("Bad Request", 400);
   }
