@@ -6,10 +6,9 @@ dotenv.config({ path: path.join(__dirname, "../.env.local") });
 export const phonicApiKey = process.env.PHONIC_API_KEY;
 export const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID;
 export const twilioAuthToken = process.env.TWILIO_AUTH_TOKEN;
-
-export const ngrokUrl = "<your ngrok url>";
-export const twilioPhoneNumber = "<your twilio phone number>";
-export const customerPhoneNumber = "<your phone number>";
+export const ngrokUrl = process.env.NGROK_URL;
+export const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+export const customerPhoneNumber = process.env.CUSTOMER_PHONE_NUMBER;
 
 if (!phonicApiKey) {
   throw new Error("Missing PHONIC_API_KEY environment variable");
