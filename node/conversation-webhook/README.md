@@ -1,0 +1,1 @@
+This example walks you through creating an agent that uses a webhook configuration endpoint, and uses a webhook tool. It also demonstrates how to set up an endpoint to receive webhook events.

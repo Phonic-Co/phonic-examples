@@ -11,7 +11,11 @@ async function outboundCall() {
   await client.conversations.outboundCall({
     to_phone_number: "YOUR_PHONE_NUMBER", // e.g. +15551234567
     config: {
-      agent: "my-first-agent",
+      agent: "travel-agent",
+      template_variables: {
+        customer_name: "Alice",
+        interest: "nature",
+      },
     },
   });
 }
