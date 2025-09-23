@@ -21,7 +21,7 @@ npm install
 
 1. Obtain a Phonic API Key by visiting the [Phonic API Keys](https://phonic.co/api-keys) page and creating an API key.
 2. Create an `.env.local` file in the example root with the following content:
-```
+```dotenv
 PHONIC_API_KEY="your_api_key"
 ```
 
@@ -45,4 +45,4 @@ Grab the agent's phone number on the [Agents page](https://phonic.co/agents), an
 
 ## 📄 License
 
-[MIT](LICENSE)
+[MIT](../../LICENSE)
