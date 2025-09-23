@@ -1,12 +1,12 @@
 {
-  "name": "phonic-examples-quick-start",
+  "name": "phonic-examples-node",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "quick-start/create-agent": "tsx quick-start/create-agent.ts",
-    "quick-start/outbound-call": "tsx quick-start/outbound-call.ts",
-    "websocket-tools/create-tools": "tsx websocket-tools/create-tools.ts",
-    "websocket-tools/create-agent": "tsx websocket-tools/create-agent.ts",
+    "quick-start:create-agent": "tsx quick-start/create-agent.ts",
+    "quick-start:outbound-call": "tsx quick-start/outbound-call.ts",
+    "websocket-tools:start": "tsx websocket-tools/index.ts",
+    "websocket-tools:dev": "tsx watch websocket-tools/index.ts",
     "check": "biome check --write",
     "ct": "npm run check && npx tsc"
   },
