@@ -1,28 +1,59 @@
 async function getTemperature({ city }: { city: string }) {
   console.log(`Getting temperature for ${city}`);
 
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  try {
+    // First, get coordinates for the city
+    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+    const geoResponse = await fetch(geocodingUrl);
 
-  // Return mock temperature data
-  const temperatures: Record<string, { temp: string; conditions: string }> = {
-    "new york": { temp: "72°", conditions: "partly cloudy" },
-    "los angeles": { temp: "78°", conditions: "sunny" },
-    chicago: { temp: "65°", conditions: "windy and overcast" },
-    miami: { temp: "85°", conditions: "humid and sunny" },
-    seattle: { temp: "62°", conditions: "rainy" },
-    denver: { temp: "68°", conditions: "clear skies" },
-  };
+    if (!geoResponse.ok) {
+      throw new Error(`Geocoding API error: ${geoResponse.status}`);
+    }
 
-  const cityLower = city.toLowerCase();
-  const data = temperatures[cityLower] || { temp: "75°", conditions: "clear" };
+    const geoData = (await geoResponse.json()) as {
+      results?: Array<{
+        latitude: number;
+        longitude: number;
+        name: string;
+      }>;
+    };
 
-  return {
-    city,
-    temperature: data.temp,
-    conditions: data.conditions,
-    timestamp: new Date().toISOString(),
-  };
+    if (!geoData.results || geoData.results.length === 0) {
+      return {
+        city,
+        error: `Could not find location: ${city}`,
+      };
+    }
+
+    const { latitude, longitude, name } = geoData.results[0];
+
+    // Fetch temperature from Open-Meteo
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&temperature_unit=fahrenheit`;
+    const weatherResponse = await fetch(weatherUrl);
+
+    if (!weatherResponse.ok) {
+      throw new Error(`Weather API error: ${weatherResponse.status}`);
+    }
+
+    const weatherData = (await weatherResponse.json()) as {
+      current: {
+        temperature_2m: number;
+      };
+    };
+
+    const temp = Math.round(weatherData.current.temperature_2m);
+
+    return {
+      city: name,
+      temperature: `${temp}°F`,
+    };
+  } catch (error) {
+    console.error("Error fetching temperature:", error);
+    return {
+      city,
+      error: "Failed to fetch temperature",
+    };
+  }
 }
 
 export async function handleToolCall(message: {
