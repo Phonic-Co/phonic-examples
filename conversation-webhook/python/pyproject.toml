@@ -1,0 +1,16 @@
+[project]
+name = "conversation-webhook-python"
+version = "0.1.0"
+description = "Phonic Conversation Webhook Example"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "black==25.9.0",
+    "fastapi==0.117.1",
+    "isort==6.0.1",
+    "phonic==0.30.7",
+    "python-dotenv==1.1.1",
+    "svix==1.76.1",
+    "twilio==9.8.1",
+    "uvicorn==0.32.0",
+]
