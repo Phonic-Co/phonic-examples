@@ -28,7 +28,7 @@ async def inbound() -> Response:
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    queue = asyncio.Queue()
+    queue: asyncio.Queue = asyncio.Queue()
     stream_sid = None
 
     async def receive_from_phonic(message: ConversationsSocketClientResponse):
