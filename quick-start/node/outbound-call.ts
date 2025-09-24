@@ -12,6 +12,7 @@ async function outboundCall() {
     to_phone_number: process.env.CUSTOMER_PHONE_NUMBER as string,
     config: {
       agent: "my-first-agent",
+      welcome_message: "Hello, how can I help you?",
     },
   });
 }

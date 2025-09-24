@@ -12,5 +12,10 @@
     "target": "esnext"
   },
   "exclude": ["node_modules"],
-  "include": ["**/*.ts", "../conversation-webhook/node/create-agent.ts", "../conversation-webhook/node/index.ts", "../conversation-webhook/node/outbound-call.ts"]
+  "include": [
+    "**/*.ts",
+    "../conversation-webhook/node/create-agent.ts",
+    "../conversation-webhook/node/index.ts",
+    "../conversation-webhook/node/outbound-call.ts"
+  ]
 }
