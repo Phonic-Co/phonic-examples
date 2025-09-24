@@ -3,7 +3,7 @@
 This example demonstrates how to create a Phonic agent that uses:
 
 - **Webhook Configs**: Calls your local server endpoint to get a dynamic config
-- **Custom Webhook Tools**: Tool execution via webhooks  
+- **Custom Webhook Tools**: Tool execution via webhooks
 - **Event Webhooks**: Sends conversation events to your local server
 
 The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override it's default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will receive a conversation.ended and a conversation.analysis webhook.

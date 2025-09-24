@@ -1,0 +1,29 @@
+{
+  "name": "conversation-webhook-node",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "create-agent": "tsx create-agent.ts",
+    "outbound-call": "tsx outbound-call.ts",
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts",
+    "check": "biome check --write",
+    "ct": "npm run check && npx tsc"
+  },
+  "dependencies": {
+    "@hono/node-server": "1.17.1",
+    "@hono/node-ws": "1.2.0",
+    "dotenv": "16.5.0",
+    "hono": "4.8.5",
+    "phonic": "0.30.8",
+    "svix": "^1.76.1",
+    "tsx": "4.20.3",
+    "twilio": "5.7.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@types/node": "24.5.2",
+    "@types/ws": "^8.18.1",
+    "typescript": "5.9.2"
+  }
+}

@@ -1,10 +1,9 @@
 import os
-from pathlib import Path
 
 from dotenv import load_dotenv
 from phonic import Phonic
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
+load_dotenv(".env.local")
 
 CONFIG_WEBHOOK_AUTHORIZATION = os.getenv(
     "PHONIC_CONFIG_WEBHOOK_AUTHORIZATION", "Bearer authorization_key"
@@ -16,12 +15,12 @@ client = Phonic(api_key=os.getenv("PHONIC_API_KEY"))
 
 def create_tool():
     client.tools.create(
-        name="add_destination",
+        name="add_destination_2",
         description="Add a destination to the list when the user indicates they will visit it.",
         type="custom_webhook",
         execution_mode="sync",
         endpoint_method="POST",
-        endpoint_url=f"{NGROK_URL}/webhooks/add-destination",
+        endpoint_url=f"https://{NGROK_URL}/webhooks/add-destination",
         endpoint_timeout_ms=7000,
         parameters=[
             {
@@ -54,7 +53,7 @@ def create_agent():
             "list of destinations."
         ),
         configuration_endpoint={
-            "url": f"{NGROK_URL}/webhooks/phonic-config",
+            "url": f"https://{NGROK_URL}/webhooks/phonic-config",
             "headers": {"Authorization": CONFIG_WEBHOOK_AUTHORIZATION},
             "timeout_ms": 7000,
         },

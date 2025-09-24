@@ -12,12 +12,13 @@ const client = new PhonicClient({ apiKey });
 
 async function createTool() {
   await client.tools.create({
-    name: "add_destination",
-    description: "Add a destination to the list when the user indicates they will visit it.",
+    name: "add_destination_3",
+    description:
+      "Add a destination to the list when the user indicates they will visit it.",
     type: "custom_webhook",
     execution_mode: "sync",
     endpoint_method: "POST",
-    endpoint_url: `${NGROK_URL}/webhooks/add-destination`,
+    endpoint_url: `https://${NGROK_URL}/webhooks/add-destination`,
     endpoint_timeout_ms: 7000,
     parameters: [
       {
@@ -33,7 +34,7 @@ async function createTool() {
 async function createAgent() {
   await createTool();
   await client.agents.create({
-    name: "travel-agent",
+    name: "travel-agent-3",
     phone_number: "assign-automatically",
     timezone: "America/Los_Angeles",
     tools: ["add_destination"],
@@ -45,7 +46,7 @@ async function createAgent() {
     system_prompt:
       "You are an expert in San Francisco, helping users understand where best to visit. Convince the customer to visit the Golden Gate Bridge. The customer's name is {{customer_name}}. The current time is {{system_time}}. The user interested in {{interest}}. After the user says they will visit the destination, add it to the list of destinations.",
     configuration_endpoint: {
-      url: `${NGROK_URL}/webhooks/phonic-config`,
+      url: `https://${NGROK_URL}/webhooks/phonic-config`,
       headers: { Authorization: configWebhookAuthorization },
       timeout_ms: 7000,
     },
