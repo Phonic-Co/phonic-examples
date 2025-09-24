@@ -1,5 +1,6 @@
 import asyncio
 import os
+import uvicorn
 from pathlib import Path
 
 from call_tool import get_flights
@@ -12,10 +13,10 @@ from phonic.conversations.socket_client import \
 from phonic.types.config_payload import ConfigPayload
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
+load_dotenv(".env.local")
 
 app = FastAPI()
-client = AsyncPhonic()
+client = AsyncPhonic(api_key=os.getenv("PHONIC_API_KEY"))
 
 
 @app.post("/inbound")
@@ -30,7 +31,7 @@ async def inbound() -> Response:
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    queue = asyncio.Queue()
+    queue: asyncio.Queue = asyncio.Queue()
     stream_sid = None
 
     async def handle_tool_call(message: ToolCallPayload):
@@ -110,3 +111,8 @@ async def websocket_endpoint(websocket: WebSocket):
             await process_task
 
     await handle_websocket()
+
+if __name__ == "__main__":
+    port = 8080
+    print(f"Listening on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)

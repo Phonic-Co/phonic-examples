@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from twilio.rest import Client
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
+load_dotenv(".env.local")
 
 client = Client(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"])
 
