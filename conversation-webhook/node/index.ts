@@ -8,7 +8,7 @@ config({ path: ".env.local" });
 
 const configWebhookAuthorization =
   process.env.PHONIC_CONFIG_WEBHOOK_AUTHORIZATION ?? "Bearer authorization_key";
-const phonicWebhookSecret = process.env.PHONIC_WEBHOOK_SECRET;
+const phonicWebhookSigningSecret = process.env.PHONIC_WEBHOOK_SIGNING_SECRET;
 
 const app = new Hono();
 
@@ -35,14 +35,14 @@ app.post("/webhooks/phonic-config", async (c) => {
 });
 
 app.post("/webhooks/events", async (c) => {
-  if (!phonicWebhookSecret) {
+  if (!phonicWebhookSigningSecret) {
     return c.text("Bad Request", 400);
   }
 
   const rawBody = await c.req.text();
 
   console.log("Events webhook raw body:", rawBody);
-  const wh = new Webhook(phonicWebhookSecret);
+  const wh = new Webhook(phonicWebhookSigningSecret);
 
   try {
     const payload = wh.verify(rawBody, {
