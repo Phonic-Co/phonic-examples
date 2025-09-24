@@ -6,7 +6,11 @@ This example demonstrates how to create a Phonic agent that uses:
 - **Custom Webhook Tools**: Tool execution via webhooks
 - **Event Webhooks**: Sends conversation events to your local server
 
+In this example, we will help you both create the agent and a simple FastAPI server that will handle the webhook requests.
+
 The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override its default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will receive a conversation.ended and a conversation.analysis webhook.
+
+We demonstrate using an Authorization header to secure the `/webhooks/phonic-config` endpoint. This is set using the `PHONIC_CONFIG_WEBHOOK_AUTHORIZATION` environment variable, which you provide as part of your agent definition and will be checked by the FastAPI endpoint.
 
 ## 1. Prerequisites
 
@@ -37,6 +41,8 @@ Enable webhook events in the Phonic UI. Navigate to the [Webhooks](https://phoni
 - conversation.analysis
 - conversation.ended
 
+Copy the Webhook Signing Secret, which will be used to verify that the webhook requests are coming from Phonic.
+
 In the endpoint field, type in your ngrok URL, followed by `/webhooks/events`.
 
 ### 2.3 Configure Environment
@@ -44,10 +50,10 @@ In the endpoint field, type in your ngrok URL, followed by `/webhooks/events`.
 Create an `.env.local` file and fill it with:
 ```dotenv
 PHONIC_API_KEY="ph_..."
-PHONIC_WEBHOOK_SECRET="whsec_..." # Found in the Webhooks tab in the Phonic UI
-PHONIC_CONFIG_WEBHOOK_AUTHORIZATION="Bearer your_auth_key"
+PHONIC_WEBHOOK_SIGNING_SECRET="whsec_..." # Found in the Webhooks tab in the Phonic UI
+PHONIC_CONFIG_WEBHOOK_AUTHORIZATION="Bearer your_auth_key" # Authorization key to secure the /webhooks/phonic-config endpoint
 NGROK_URL="https://your-ngrok-url.ngrok-free.app"
-CUSTOMER_PHONE_NUMBER="+15551234567"
+CUSTOMER_PHONE_NUMBER="+15551234567" # The phone number to call
 ```
 Your phone number must include the leading `+` and country code, and must not contain dashes or spaces.
 

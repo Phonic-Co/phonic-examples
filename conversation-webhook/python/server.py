@@ -13,7 +13,7 @@ app = FastAPI()
 config_webhook_authorization = os.getenv(
     "PHONIC_CONFIG_WEBHOOK_AUTHORIZATION", "Bearer authorization_key"
 )
-phonic_webhook_secret = os.getenv("PHONIC_WEBHOOK_SECRET")
+PHONIC_WEBHOOK_SIGNING_SECRET = os.getenv("PHONIC_WEBHOOK_SIGNING_SECRET")
 
 
 @app.post("/webhooks/phonic-config")
@@ -37,7 +37,7 @@ async def phonic_config(request: Request) -> JSONResponse:
 
 @app.post("/webhooks/events")
 async def events_webhook(request: Request) -> Response:
-    if not phonic_webhook_secret:
+    if not PHONIC_WEBHOOK_SIGNING_SECRET:
         raise HTTPException(status_code=400, detail="Bad Request")
 
     raw_body = await request.body()
@@ -47,7 +47,7 @@ async def events_webhook(request: Request) -> Response:
     svix_timestamp = request.headers.get("svix-timestamp", "")
 
     try:
-        wh = Webhook(phonic_webhook_secret)
+        wh = Webhook(PHONIC_WEBHOOK_SIGNING_SECRET)
         headers = {
             "svix-signature": signature,
             "svix-id": svix_id,
