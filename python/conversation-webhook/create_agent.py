@@ -46,7 +46,13 @@ def create_agent():
             "interest": {"default_value": "biking"},
         },
         welcome_message="Hi {{customer_name}}. How can I help you today?",
-        system_prompt="You are an expert in San Francisco, helping users understand where best to visit. Convince the customer to visit the Golden Gate Bridge. The customer's name is {{customer_name}}. The current time is {{system_time}}. The user interested in {{interest}}. After the user says they will visit the destination, add it to the list of destinations.",
+        system_prompt=(
+            "You are an expert in San Francisco, helping users understand where best to visit. "
+            "Convince the customer to visit the Golden Gate Bridge. The customer's name is "
+            "{{customer_name}}. The current time is {{system_time}}. The user interested in "
+            "{{interest}}. After the user says they will visit the destination, add it to the "
+            "list of destinations."
+        ),
         configuration_endpoint={
             "url": f"{NGROK_URL}/webhooks/phonic-config",
             "headers": {"Authorization": CONFIG_WEBHOOK_AUTHORIZATION},

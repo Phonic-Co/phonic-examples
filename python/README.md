@@ -18,4 +18,5 @@ To configure your environment, follow these steps:
 2. Create an `.env.local` file in this directory (`phonic-examples/python`) with the following content:
 ```dotenv
 PHONIC_API_KEY="your_api_key"
+CUSTOMER_PHONE_NUMBER="+15551234567" # Phone number for outbound calls
 ```

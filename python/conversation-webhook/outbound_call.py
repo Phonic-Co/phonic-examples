@@ -11,7 +11,7 @@ client = Phonic(api_key=os.getenv("PHONIC_API_KEY"))
 
 def outbound_call():
     client.conversations.outbound_call(
-        to_phone_number="+16466239678",  # e.g. +15551234567
+        to_phone_number=os.getenv("CUSTOMER_PHONE_NUMBER", ""),
         config={
             "agent": "travel-agent",
             "template_variables": {

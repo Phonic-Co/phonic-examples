@@ -25,6 +25,7 @@ npm install
 
 ```dotenv
 PHONIC_API_KEY="your_api_key"
+CUSTOMER_PHONE_NUMBER="+15551234567" # Phone number to call
 ```
 
 ### 3. Create an agent
@@ -34,8 +35,6 @@ npm run quick-start:create-agent
 ```
 
 ### 4. Make an outbound call
-
-Open `outbound-call.ts`, update `YOUR_PHONE_NUMBER` to your phone number, and run:
 
 ```bash
 npm run quick-start:outbound-call

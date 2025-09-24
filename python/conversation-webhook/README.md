@@ -53,6 +53,7 @@ PHONIC_API_KEY="your_api_key"
 PHONIC_WEBHOOK_SECRET="your_webhook_secret" # Found in the Webhooks tab in the Phonic UI
 PHONIC_CONFIG_WEBHOOK_AUTHORIZATION="Bearer your_auth_key"
 NGROK_URL="https://your-ngrok-url.ngrok.io" # Your server's public URL
+CUSTOMER_PHONE_NUMBER="+15551234567" # Phone number to call
 ```
 
 Copy the public URL (e.g., `https://abc123.ngrok.io`) and add it to your `.env.local` as `NGROK_URL`.
