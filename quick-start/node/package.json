@@ -1,0 +1,21 @@
+{
+  "name": "quick-start-node",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "create-agent": "tsx create-agent.ts",
+    "outbound-call": "tsx outbound-call.ts",
+    "check": "biome check --write",
+    "ct": "npm run check && npx tsc"
+  },
+  "dependencies": {
+    "dotenv": "16.5.0",
+    "phonic": "0.30.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@types/node": "24.5.2",
+    "@types/ws": "^8.18.1",
+    "typescript": "5.9.2"
+  }
+}
