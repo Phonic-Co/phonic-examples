@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "create-agent": "tsx create-agent.ts",
-    "start": "tsx server.ts",
+    "create-tool": "tsx create-tool.ts",
+    "start": "tsx index.ts",
+    "dev": "tsx watch index.ts",
     "outbound-call": "tsx outbound-call.ts",
     "check": "biome check --write",
     "ct": "npm run check && npx tsc"
