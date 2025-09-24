@@ -9,7 +9,13 @@ client = Phonic(
     api_key=os.getenv("PHONIC_API_KEY"),
 )
 
-client.agents.create(
-    name="my-first-agent",
-    phone_number="assign-automatically",
-)
+
+def create_agent():
+    client.agents.create(
+        name="my-first-agent",
+        phone_number="assign-automatically",
+    )
+
+
+if __name__ == "__main__":
+    create_agent()
