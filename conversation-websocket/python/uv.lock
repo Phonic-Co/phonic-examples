@@ -249,6 +249,33 @@ wheels = [
 ]
 
 [[package]]
+name = "conversation-websocket-python"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "black" },
+    { name = "fast-flights" },
+    { name = "fastapi" },
+    { name = "isort" },
+    { name = "phonic" },
+    { name = "python-dotenv" },
+    { name = "twilio" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "black", specifier = "==25.9.0" },
+    { name = "fast-flights", specifier = "==2.2" },
+    { name = "fastapi", specifier = "==0.117.1" },
+    { name = "isort", specifier = "==6.0.1" },
+    { name = "phonic", specifier = "==0.30.7" },
+    { name = "python-dotenv", specifier = "==1.1.1" },
+    { name = "twilio", specifier = "==9.8.1" },
+    { name = "uvicorn", specifier = "==0.32.0" },
+]
+
+[[package]]
 name = "fast-flights"
 version = "2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -530,33 +557,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d5/53/1a32fd682e601fc97ec517a016764aeee734c8f59462a0944d9c54aea603/phonic-0.30.7.tar.gz", hash = "sha256:a9718a89c29c7f30b57b95280df4fa8267e004515949af03df7cd932af59a7b6", size = 71997 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/fe/ee/1fe7ddd2931fadc4e6222bbd8b5b607344ab05f2b8b8d2215aaee95d2c69/phonic-0.30.7-py3-none-any.whl", hash = "sha256:d351b876027df99ecff3b373d2c822dea127899e3bd8e7205f2aa293e4ee81ea", size = 185476 },
-]
-
-[[package]]
-name = "phonic-conversation-websocket-example"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "black" },
-    { name = "fast-flights" },
-    { name = "fastapi" },
-    { name = "isort" },
-    { name = "phonic" },
-    { name = "python-dotenv" },
-    { name = "twilio" },
-    { name = "uvicorn" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "black", specifier = "==25.9.0" },
-    { name = "fast-flights", specifier = "==2.2" },
-    { name = "fastapi", specifier = "==0.117.1" },
-    { name = "isort", specifier = "==6.0.1" },
-    { name = "phonic", specifier = "==0.30.7" },
-    { name = "python-dotenv", specifier = "==1.1.1" },
-    { name = "twilio", specifier = "==9.8.1" },
-    { name = "uvicorn", specifier = "==0.32.0" },
 ]
 
 [[package]]

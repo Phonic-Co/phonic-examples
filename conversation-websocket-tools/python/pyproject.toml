@@ -1,7 +1,7 @@
 [project]
-name = "phonic-conversation-websocket-tools-example"
+name = "conversation-websocket-tools-python"
 version = "0.1.0"
-description = "Phonic Conversation Websocket Tools Example"
+description = "Phonic Examples: Conversation WebSocket Tools Python"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

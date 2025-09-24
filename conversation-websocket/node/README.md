@@ -1,34 +1,36 @@
-# Conversation WebSocket Example
+# Conversation WebSocket Example (Node)
 
-This example demonstrates how to use Phonic's conversation API with WebSockets in Node.js, integrating with Twilio for phone calls.
+## 1. Setup
 
-## Setup
+Clone the repository and install packages:
+```bash
+cd phonic-examples/conversation-websocket/node
+npm install
+```
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
+Follow the ngrok setup instructions [here](https://github.com/Phonic-Co/phonic-examples/blob/main/ngrok_tunneling.md).
+Retrieve your Twilio credentials following
+[this](https://www.twilio.com/docs/voice/tutorials/how-to-make-outbound-phone-calls/python#retrieve-your-twilio-account-credentials).
 
-2. Create a `.env.local` file in the `node` directory with your credentials:
-   ```
-   PHONIC_API_KEY=your_phonic_api_key
-   TWILIO_ACCOUNT_SID=your_twilio_account_sid
-   TWILIO_AUTH_TOKEN=your_twilio_auth_token
-   ```
+### 2. Configure Environment
 
-3. Update the constants in `env-vars.ts`:
-   - `ngrokUrl`: Your ngrok URL (without https://)
-   - `twilioPhoneNumber`: Your Twilio phone number
-   - `customerPhoneNumber`: The phone number to call
+Create an `.env.local` file and fill it with:
+```dotenv
+PHONIC_API_KEY="ph_..."
+NGROK_URL="https://your-ngrok-url.ngrok-free.app"
+TWILIO_PHONE_NUMBER="+15551234567"
+CUSTOMER_PHONE_NUMBER="+15551234567"
+TWILIO_ACCOUNT_SID="your sid"
+TWILIO_AUTH_TOKEN="your auth token"
+```
+Both phone numbers must include the leading `+` and country code, and must not contain dashes or spaces.
 
-## Usage
-
-### 1. Create an agent
+### 3. Create an agent
 
 First, create a Phonic agent:
 
 ```bash
-tsx create-agent.ts
+npm run create-agent
 ```
 
 ### 2. Start the server
@@ -36,7 +38,7 @@ tsx create-agent.ts
 Start the WebSocket server:
 
 ```bash
-tsx server.ts
+npm run start
 ```
 
 ### 3. Make an outbound call
@@ -44,7 +46,7 @@ tsx server.ts
 In a new terminal, make an outbound call:
 
 ```bash
-tsx outbound-call.ts
+npm run outbound-call
 ```
 
 ### 4. Make an inbound call

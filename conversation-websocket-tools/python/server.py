@@ -1,9 +1,8 @@
+import argparse
 import asyncio
 import os
-import uvicorn
-import argparse
 
-from call_tool import get_flights
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Response, WebSocket
 from phonic import (AsyncPhonic, AudioChunkPayload, ToolCallOutputPayload,
@@ -12,6 +11,8 @@ from phonic.conversations.socket_client import \
     ConversationsSocketClientResponse
 from phonic.types.config_payload import ConfigPayload
 from twilio.twiml.voice_response import Connect, VoiceResponse
+
+from call_tool import get_flights
 
 load_dotenv(".env.local")
 
@@ -23,7 +24,7 @@ client = AsyncPhonic(api_key=os.getenv("PHONIC_API_KEY"))
 async def inbound() -> Response:
     voice_response = VoiceResponse()
     connect = Connect()
-    connect.stream(url=f"wss://{os.environ['NGROK_URL']}/ws")
+    connect.stream(url=f"wss://{os.environ['NGROK_URL'].replace('https://', '')}/ws")
     voice_response.append(connect)
     return Response(content=str(voice_response), media_type="application/xml")
 
@@ -112,11 +113,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
     await handle_websocket()
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=3000, help="Port to listen on")
     args = parser.parse_args()
-    
+
     port = args.port
     print(f"Listening on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)

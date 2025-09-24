@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 from dotenv import load_dotenv
 from twilio.rest import Client
@@ -13,7 +12,7 @@ client = Client(os.environ["TWILIO_ACCOUNT_SID"], os.environ["TWILIO_AUTH_TOKEN"
 def make_call():
     response = VoiceResponse()
     connect = Connect()
-    connect.stream(url=f"wss://{os.environ['NGROK_URL']}/ws")
+    connect.stream(url=f"wss://{os.environ['NGROK_URL'].removeprefix('https://')}/ws")
     response.append(connect)
 
     client.calls.create(

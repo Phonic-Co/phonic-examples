@@ -12,12 +12,6 @@ const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
-app.get("/", (c) => {
-  return c.json({
-    example: "phonic-examples-websocket-tools",
-  });
-});
-
 app.post("/inbound", (c) => {
   const url = new URL(c.req.url);
   const response = new VoiceResponse();
