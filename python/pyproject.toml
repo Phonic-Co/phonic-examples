@@ -11,5 +11,7 @@ dependencies = [
     "isort==6.0.1",
     "phonic==0.30.7",
     "python-dotenv==1.1.1",
+    "svix==1.76.1",
     "twilio==9.8.1",
+    "uvicorn==0.32.0",
 ]
