@@ -11,6 +11,11 @@
     "conversation-webhook:outbound-call": "tsx conversation-webhook/outbound-call.ts",
     "conversation-webhook:start": "tsx conversation-webhook/index.ts",
     "conversation-webhook:dev": "tsx watch conversation-webhook/index.ts",
+    "conversation-websocket-tools:start": "tsx conversation-websocket-tools/server.ts",
+    "conversation-websocket-tools:dev": "tsx watch conversation-websocket-tools/server.ts",
+    "conversation-websocket-tools:create-agent": "tsx conversation-websocket-tools/create-agent.ts",
+    "conversation-websocket-tools:create-tool": "tsx conversation-websocket-tools/create-tool.ts",
+    "conversation-websocket-tools:outbound-call": "tsx conversation-websocket-tools/outbound-call.ts",
     "check": "biome check --write",
     "ct": "npm run check && npx tsc"
   },
@@ -27,6 +32,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
     "@types/node": "24.5.2",
+    "@types/ws": "^8.18.1",
     "typescript": "5.9.2"
   }
 }
