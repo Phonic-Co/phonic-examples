@@ -12,7 +12,7 @@ const client = new PhonicClient({ apiKey });
 
 async function createTool() {
   await client.tools.create({
-    name: "add_destination_3",
+    name: "add_destination",
     description:
       "Add a destination to the list when the user indicates they will visit it.",
     type: "custom_webhook",
@@ -34,7 +34,7 @@ async function createTool() {
 async function createAgent() {
   await createTool();
   await client.agents.create({
-    name: "travel-agent-3",
+    name: "travel-agent",
     phone_number: "assign-automatically",
     timezone: "America/Los_Angeles",
     tools: ["add_destination"],

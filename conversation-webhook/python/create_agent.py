@@ -15,7 +15,7 @@ client = Phonic(api_key=os.getenv("PHONIC_API_KEY"))
 
 def create_tool():
     client.tools.create(
-        name="add_destination_2",
+        name="add_destination",
         description="Add a destination to the list when the user indicates they will visit it.",
         type="custom_webhook",
         execution_mode="sync",
