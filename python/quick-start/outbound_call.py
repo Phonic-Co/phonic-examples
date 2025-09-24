@@ -10,7 +10,7 @@ client = Phonic(
 )
 
 client.conversations.outbound_call(
-    to_phone_number="YOUR_PHONE_NUMBER",  # e.g. +15551234567
+    to_phone_number=os.getenv("CUSTOMER_PHONE_NUMBER", "") # e.g. +15551234567
     config={
         "agent": "my-first-agent",
         "welcome_message": "Hello, how can I help you?",

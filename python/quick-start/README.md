@@ -16,8 +16,6 @@ python create_agent.py
 
 ### 2. Make an outbound call
 
-Open `outbound_call.py`, update `YOUR_PHONE_NUMBER` to your phone number, and run:
-
 ```bash
 python outbound_call.py
 ```
