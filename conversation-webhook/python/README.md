@@ -6,11 +6,11 @@ This example demonstrates how to create a Phonic agent that uses:
 - **Custom Webhook Tools**: Tool execution via webhooks
 - **Event Webhooks**: Sends conversation events to your local server
 
-In this example, we will help you both create the agent and a simple Hono API server that will handle the webhook requests.
+In this example, we will help you both create the agent and a simple FastAPI server that will handle the webhook requests.
 
 The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override its default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will receive a conversation.ended and a conversation.analysis webhook.
 
-We demonstrate using an Authorization header to secure the `/webhooks/phonic-config` endpoint. This is set using the `PHONIC_CONFIG_WEBHOOK_AUTHORIZATION` environment variable, which you provide as part of your agent definition and will be checked by the Hono API endpoint.
+We demonstrate using an Authorization header to secure the `/webhooks/phonic-config` endpoint. This is set using the `PHONIC_CONFIG_WEBHOOK_AUTHORIZATION` environment variable, which you provide as part of your agent definition and will be checked by the FastAPI endpoint.
 
 ## 1. Prerequisites
 
