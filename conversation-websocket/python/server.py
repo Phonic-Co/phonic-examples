@@ -1,5 +1,6 @@
 import asyncio
 import os
+import argparse
 
 import uvicorn
 from dotenv import load_dotenv
@@ -91,7 +92,11 @@ async def websocket_endpoint(websocket: WebSocket):
 
     await handle_websocket()
 
-if __name__ == "__main__":
-    port = 8080
+if __name__ == "__main__":    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=3000, help="Port to listen on")
+    args = parser.parse_args()
+    
+    port = args.port
     print(f"Listening on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
