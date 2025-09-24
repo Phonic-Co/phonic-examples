@@ -1,6 +1,12 @@
 from phonic import Phonic
+import os
+from dotenv import load_dotenv
 
-client = Phonic()
+load_dotenv(".env.local")
+
+client = Phonic(
+    api_key=os.getenv("PHONIC_API_KEY"),
+)
 
 client.tools.create(
     name="find_flights_sync",
