@@ -1,7 +1,6 @@
-import path from "node:path";
 import dotenv from "dotenv";
 
-dotenv.config({ path: path.join(__dirname, "../.env.local") });
+dotenv.config({ path: ".env.local" });
 
 export const phonicApiKey = process.env.PHONIC_API_KEY as string;
 export const twilioAccountSid = process.env.TWILIO_ACCOUNT_SID as string;

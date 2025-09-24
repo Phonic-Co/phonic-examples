@@ -1,6 +1,6 @@
+import argparse
 import asyncio
 import os
-import argparse
 
 import uvicorn
 from dotenv import load_dotenv
@@ -21,7 +21,7 @@ client = AsyncPhonic(api_key=os.getenv("PHONIC_API_KEY"))
 async def inbound() -> Response:
     voice_response = VoiceResponse()
     connect = Connect()
-    connect.stream(url=f"wss://{os.environ['NGROK_URL']}/ws")
+    connect.stream(url=f"wss://{os.environ['NGROK_URL'].removeprefix('https://')}/ws")
     voice_response.append(connect)
     return Response(content=str(voice_response), media_type="application/xml")
 
@@ -92,11 +92,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
     await handle_websocket()
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=3000, help="Port to listen on")
     args = parser.parse_args()
-    
+
     port = args.port
     print(f"Listening on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)

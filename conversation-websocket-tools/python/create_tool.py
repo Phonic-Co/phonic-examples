@@ -1,6 +1,7 @@
-from phonic import Phonic
 import os
+
 from dotenv import load_dotenv
+from phonic import Phonic
 
 load_dotenv(".env.local")
 

@@ -1,40 +1,45 @@
-# Conversations via WebSocket
+# Conversation WebSocket Tools Example (Python)
 
-This example walks you through the process of running a conversation via WebSocket, using simultaneous connections with Twilio and Phonic.
+## 1. Setup
 
-## 📋 Prerequisites
-
-Follow the setup instructions [here](https://github.com/Phonic-Co/phonic-examples/python).
-
-## 🚀 Run Steps
-
-### 1. Update `.env.local`
-
-Replace the phone numbers and ngrok URL with the correct values (see the guide for more information).
-
-### 2. Create a tool and agent
-
+Clone the repository and install packages:
 ```bash
-uv run python create_tool.py
-uv run python create_agent.py
+cd phonic-examples/conversation-websocket-tools/python
+uv sync
 ```
 
-### 3. Run the server
+Follow the ngrok setup instructions [here](https://github.com/Phonic-Co/phonic-examples/blob/main/ngrok_tunneling.md).
+Retrieve your Twilio credentials following
+[this](https://www.twilio.com/docs/voice/tutorials/how-to-make-outbound-phone-calls/python#retrieve-your-twilio-account-credentials).
+
+### 2. Configure Environment
+
+Create an `.env.local` file and fill it with:
+```dotenv
+PHONIC_API_KEY="ph_..."
+NGROK_URL="https://your-ngrok-url.ngrok-free.app"
+TWILIO_PHONE_NUMBER="+15551234567"
+CUSTOMER_PHONE_NUMBER="+15551234567"
+TWILIO_ACCOUNT_SID="your sid"
+TWILIO_AUTH_TOKEN="your auth token"
+```
+Both phone numbers must include the leading `+` and country code, and must not contain dashes or spaces.
+
+## 3. Create a tool and agent
 
 ```bash
-uv run python server.py
+uv run create_tool.py
+uv run create_agent.py
 ```
 
-### 4. Make an outbound call
+## 4. Start the server
 
 ```bash
-uv run python outbound_call.py
+uv run server.py
 ```
 
-### 3. Make an inbound call
+## 5. Make an outbound call
 
-Grab the agent's phone number on the [Agents page](https://phonic.co/agents), and give it a call!
-
-## 📄 License
-
-[MIT](../../LICENSE)
+```bash
+uv run outbound_call.py
+```

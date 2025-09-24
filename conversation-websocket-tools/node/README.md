@@ -1,11 +1,11 @@
-# Conversation WebSocket Example (Python)
+# Conversation WebSocket Tools Example (Node)
 
 ## 1. Setup
 
 Clone the repository and install packages:
 ```bash
-cd phonic-examples/conversation-websocket/python
-uv sync
+cd phonic-examples/conversation-websocket-tools/node
+npm install
 ```
 
 Follow the ngrok setup instructions [here](https://github.com/Phonic-Co/phonic-examples/blob/main/ngrok_tunneling.md).
@@ -25,21 +25,30 @@ TWILIO_AUTH_TOKEN="your auth token"
 ```
 Both phone numbers must include the leading `+` and country code, and must not contain dashes or spaces.
 
-## 3. Create an agent
+### 3. Create an agent
 
 First, create a Phonic agent:
-```bash
-uv run create_agent.py
-```
-
-## 4. Start the server
 
 ```bash
-uv run server.py
+npm run create-agent
 ```
 
-## 5. Make an outbound call
+### 2. Start the server
+
+Start the WebSocket server:
 
 ```bash
-uv run outbound_call.py
+npm run start
 ```
+
+### 3. Make an outbound call
+
+In a new terminal, make an outbound call:
+
+```bash
+npm run outbound-call
+```
+
+### 4. Make an inbound call
+
+Simply call your Twilio phone number.

@@ -13,7 +13,7 @@ const client = twilio(twilioAccountSid, twilioAuthToken);
 async function makeCall() {
   const response = new VoiceResponse();
   response.connect().stream({
-    url: `wss://${ngrokUrl}/ws`,
+    url: `wss://${ngrokUrl.replace("https://", "")}/ws`,
   });
 
   try {

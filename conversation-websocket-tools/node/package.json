@@ -1,5 +1,5 @@
 {
-  "name": "phonic-conversation-websocket-example",
+  "name": "conversation-websocket-tools-node",
   "version": "0.1.0",
   "private": true,
   "scripts": {

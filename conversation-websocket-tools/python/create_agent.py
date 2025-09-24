@@ -16,6 +16,8 @@ If you are about to call a tool, you can say something like "Just wait a moment 
 The result of the tool call may not sound natural if you read it directly,
 so please convert the tool call response to something more natural when saying it.
 For example, don't read out entire bulleted lists.
+You do not know the current date, so you must ask the user for it. If they say something like "today" or "tomorrow",
+you must ask them for the date.
 """
 
 client.agents.create(
