@@ -25,30 +25,21 @@ TWILIO_AUTH_TOKEN="your auth token"
 ```
 Both phone numbers must include the leading `+` and country code, and must not contain dashes or spaces.
 
-### 3. Create an agent
-
-First, create a Phonic agent:
+## 3. Create a tool and agent
 
 ```bash
+npm run create-tool
 npm run create-agent
 ```
 
-### 2. Start the server
-
-Start the WebSocket server:
+## 4. Start the server
 
 ```bash
-npm run start
+npm run dev
 ```
 
-### 3. Make an outbound call
-
-In a new terminal, make an outbound call:
+## 5. Make an outbound call
 
 ```bash
 npm run outbound-call
 ```
-
-### 4. Make an inbound call
-
-Simply call your Twilio phone number.

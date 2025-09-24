@@ -1,92 +1,140 @@
 import { serve } from "@hono/node-server";
 import { createNodeWebSocket } from "@hono/node-ws";
 import { Hono } from "hono";
-import twilio from "twilio";
+import type { WSContext } from "hono/ws";
+import { type Phonic, PhonicClient } from "phonic";
 import VoiceResponse from "twilio/lib/twiml/VoiceResponse";
-import { twilioAccountSid, twilioAuthToken } from "./env-vars";
-import { setupPhonic } from "./phonic";
+import { handleToolCall } from "./call-tool";
+import { phonicApiKey } from "./env-vars";
 import type { TwilioWebSocketMessage } from "./types";
 
 const app = new Hono();
-const twilioClient = twilio(twilioAccountSid, twilioAuthToken);
+const phonicClient = new PhonicClient({
+  apiKey: phonicApiKey,
+});
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
 app.post("/inbound", (c) => {
   const url = new URL(c.req.url);
   const response = new VoiceResponse();
-
   response.connect().stream({
-    url: `wss://${url.host}/inbound-ws`,
+    url: `wss://${url.host}/ws`,
   });
 
   return c.text(response.toString(), 200, { "Content-Type": "text/xml" });
 });
 
 app.get(
-  "/inbound-ws",
+  "/ws",
   upgradeWebSocket(() => {
-    let phonic: ReturnType<typeof setupPhonic>;
-    let streamSid = "";
-    let callSid = "";
+    let phonicSocket: Awaited<
+      ReturnType<typeof phonicClient.conversations.connect>
+    > | null = null;
+    let streamSid: string | null = null;
+
+    const sendToTwilio = (ws: WSContext, data: unknown) => {
+      ws.send(JSON.stringify(data));
+    };
 
     return {
-      onOpen(_, ws) {
-        phonic = setupPhonic({
-          getStreamSid: () => streamSid,
-          sendMessageToTwilio: (obj: unknown) => ws.send(JSON.stringify(obj)),
-          config: {
+      async onOpen(_, ws) {
+        try {
+          phonicSocket = await phonicClient.conversations.connect();
+
+          phonicSocket.on("message", async (message) => {
+            if (!streamSid) return;
+
+            switch (message.type) {
+              case "audio_chunk":
+                sendToTwilio(ws, {
+                  event: "media",
+                  streamSid: streamSid,
+                  media: {
+                    payload: message.audio,
+                  },
+                });
+                break;
+
+              case "tool_call": {
+                const result = await handleToolCall(message);
+                if (result && phonicSocket) {
+                  await phonicSocket.sendToolCallOutput({
+                    type: "tool_call_output",
+                    tool_call_id: message.tool_call_id,
+                    output: result,
+                  });
+                }
+                break;
+              }
+
+              case "error":
+                console.error("Phonic error:", message.error);
+                break;
+            }
+          });
+
+          phonicSocket.on("close", (event) => {
+            console.log(
+              `Phonic WebSocket closed with code ${event.code} and reason "${event.reason}"`,
+            );
+          });
+
+          phonicSocket.on("error", (error) => {
+            console.error(`Error from Phonic WebSocket: ${error.message}`);
+          });
+
+          await phonicSocket.sendConfig({
             type: "config",
-            agent: "websocket-tools",
+            agent: "agent-websocket-temperature",
             input_format: "mulaw_8000",
             output_format: "mulaw_8000",
-          },
-        });
-      },
-      onMessage(event, ws) {
-        const message = event.data;
-
-        if (typeof message !== "string") {
-          return;
+          } as Phonic.ConfigPayload);
+        } catch (error) {
+          console.error("Failed to connect to Phonic:", error);
+          ws.close();
         }
+      },
+
+      async onMessage(event, ws) {
+        const message = event.data;
+        if (typeof message !== "string") return;
 
         try {
-          const messageObj = JSON.parse(message) as TwilioWebSocketMessage;
+          const data = JSON.parse(message) as TwilioWebSocketMessage;
 
-          if (messageObj.event === "start") {
-            streamSid = messageObj.streamSid;
-            callSid = messageObj.start.callSid;
+          switch (data.event) {
+            case "start":
+              streamSid = data.streamSid;
+              break;
 
-            phonic.setExternalId(callSid);
-          } else if (messageObj.event === "stop") {
-            ws.close();
-          } else if (
-            messageObj.event === "media" &&
-            messageObj.media.track === "inbound"
-          ) {
-            phonic.audioChunk(messageObj.media.payload);
-          } else if (
-            messageObj.event === "mark" &&
-            messageObj.mark.name === "end_conversation_mark"
-          ) {
-            twilioClient
-              .calls(callSid)
-              .update({ status: "completed" })
-              .then((call) =>
-                console.log(`Ended call for ${JSON.stringify(call)}`),
-              )
-              .catch((err) => {
-                console.error("Error ending call:", err);
-              });
+            case "media":
+              if (phonicSocket && data.media.track === "inbound") {
+                await phonicSocket.sendAudioChunk({
+                  type: "audio_chunk",
+                  audio: data.media.payload,
+                });
+              }
+              break;
+
+            case "stop":
+              ws.close();
+              break;
           }
         } catch (error) {
           console.error("Failed to parse Twilio message:", error);
         }
       },
-      onClose() {
-        console.log("\n\nTwilio call finished");
 
-        phonic.close();
+      onClose() {
+        console.log("Twilio WebSocket closed");
+        if (phonicSocket) {
+          phonicSocket.close();
+        }
+      },
+
+      onError(event) {
+        console.error("WebSocket error:", event);
       },
     };
   }),
@@ -100,4 +148,4 @@ const server = serve({
 
 injectWebSocket(server);
 
-console.log(`Listening on port ${port}`);
+console.log(`Server listening on port ${port}`);
