@@ -15,19 +15,19 @@ Replace the phone numbers and ngrok URL with the correct values (see the guide f
 ### 2. Create an agent
 
 ```bash
-python create_agent.py
+uv run python create_agent.py
 ```
 
 ### 3. Run the server
 
 ```bash
-fastapi dev server.py --port 8080
+uv run python server.py
 ```
 
 ### 4. Make an outbound call
 
 ```bash
-python outbound_call.py
+uv run python outbound_call.py
 ```
 
 ### 3. Make an inbound call

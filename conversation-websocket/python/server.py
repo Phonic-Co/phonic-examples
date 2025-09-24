@@ -1,21 +1,20 @@
 import asyncio
 import os
-from pathlib import Path
+import argparse
 
-from call_tool import get_flights
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, Response, WebSocket
-from phonic import (AsyncPhonic, AudioChunkPayload, ToolCallOutputPayload,
-                    ToolCallPayload)
+from phonic import AsyncPhonic, AudioChunkPayload
 from phonic.conversations.socket_client import \
     ConversationsSocketClientResponse
 from phonic.types.config_payload import ConfigPayload
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
-load_dotenv(Path(__file__).resolve().parent.parent / ".env.local")
+load_dotenv(".env.local")
 
 app = FastAPI()
-client = AsyncPhonic()
+client = AsyncPhonic(api_key=os.getenv("PHONIC_API_KEY"))
 
 
 @app.post("/inbound")
@@ -30,23 +29,8 @@ async def inbound() -> Response:
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
-    queue = asyncio.Queue()
+    queue: asyncio.Queue = asyncio.Queue()
     stream_sid = None
-
-    async def handle_tool_call(message: ToolCallPayload):
-        args = message.parameters
-        flights = await asyncio.to_thread(
-            get_flights,
-            date=args["date"],
-            from_airport=args["from_airport"],
-            to_airport=args["to_airport"],
-        )
-        await queue.put(
-            ToolCallOutputPayload(
-                tool_call_id=message.tool_call_id,
-                output={"flights": flights},
-            )
-        )
 
     async def receive_from_phonic(message: ConversationsSocketClientResponse):
         # Handler that sends Phonic response to Twilio
@@ -59,8 +43,6 @@ async def websocket_endpoint(websocket: WebSocket):
                         "media": {"payload": message.audio},
                     }
                     await websocket.send_json(sending)
-                case "tool_call":
-                    asyncio.create_task(handle_tool_call(message))
 
     async def send_to_phonic():
         async with client.conversations.connect() as socket:
@@ -71,7 +53,7 @@ async def websocket_endpoint(websocket: WebSocket):
             # Send the initial config to Phonic
             await socket.send_config(
                 ConfigPayload(
-                    agent="agent-websocket-find-flights",
+                    agent="agent-websocket",
                 )
             )
 
@@ -80,10 +62,9 @@ async def websocket_endpoint(websocket: WebSocket):
                 chunk = await queue.get()
                 if chunk is None:
                     break
-                if isinstance(chunk, AudioChunkPayload):
-                    await socket.send_audio_chunk(chunk)
-                elif isinstance(chunk, ToolCallOutputPayload):
-                    await socket.send_tool_call_output(chunk)
+                if not isinstance(chunk, AudioChunkPayload):
+                    raise ValueError(f"Unexpected chunk type: {type(chunk)}.")
+                await socket.send_audio_chunk(chunk)
 
     async def handle_websocket():
         # Start the task that sends audio to Phonic
@@ -110,3 +91,12 @@ async def websocket_endpoint(websocket: WebSocket):
             await process_task
 
     await handle_websocket()
+
+if __name__ == "__main__":    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--port", type=int, default=3000, help="Port to listen on")
+    args = parser.parse_args()
+    
+    port = args.port
+    print(f"Listening on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
