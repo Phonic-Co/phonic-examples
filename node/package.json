@@ -7,6 +7,10 @@
     "quick-start:outbound-call": "tsx quick-start/outbound-call.ts",
     "websocket-tools:start": "tsx websocket-tools/index.ts",
     "websocket-tools:dev": "tsx watch websocket-tools/index.ts",
+    "conversation-webhook:create-agent": "tsx conversation-webhook/create-agent.ts",
+    "conversation-webhook:outbound-call": "tsx conversation-webhook/outbound-call.ts",
+    "conversation-webhook:start": "tsx conversation-webhook/index.ts",
+    "conversation-webhook:dev": "tsx watch conversation-webhook/index.ts",
     "check": "biome check --write",
     "ct": "npm run check && npx tsc"
   },
@@ -16,6 +20,7 @@
     "dotenv": "16.5.0",
     "hono": "4.8.5",
     "phonic": "0.30.8",
+    "svix": "^1.76.1",
     "tsx": "4.20.3",
     "twilio": "5.7.3"
   },

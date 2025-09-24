@@ -4,7 +4,7 @@ export type TwilioWebSocketMessage =
       streamSid: string;
       start: {
         callSid: string;
-        customParameters?: Record<string, any>;
+        customParameters?: Record<string, unknown>;
       };
     }
   | {
