@@ -8,7 +8,7 @@ load_dotenv(".env.local")
 CONFIG_WEBHOOK_AUTHORIZATION = os.getenv(
     "PHONIC_CONFIG_WEBHOOK_AUTHORIZATION", "Bearer authorization_key"
 )
-NGROK_URL = os.getenv("NGROK_URL")
+NGROK_URL = os.getenv("NGROK_URL").removeprefix("https://")
 
 client = Phonic(api_key=os.getenv("PHONIC_API_KEY"))
 

@@ -1,7 +1,7 @@
 [project]
 name = "conversation-webhook-python"
 version = "0.1.0"
-description = "Phonic Conversation Webhook Example"
+description = "Phonic Examples: Conversation Webhook Python"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

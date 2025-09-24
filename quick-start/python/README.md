@@ -1,4 +1,4 @@
-# Quick Start example
+# Quick Start Example
 
 This example walks you through creating a simple agent and making both outbound and inbound calls.
 It complements the [Quick Start guide](https://docs.phonic.co/docs/get-started/quick-start).

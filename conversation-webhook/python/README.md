@@ -6,7 +6,7 @@ This example demonstrates how to create a Phonic agent that uses:
 - **Custom Webhook Tools**: Tool execution via webhooks
 - **Event Webhooks**: Sends conversation events to your local server
 
-The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override it's default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will receive a conversation.ended and a conversation.analysis webhook.
+The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override its default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will receive a conversation.ended and a conversation.analysis webhook.
 
 ## 1. Prerequisites
 
@@ -18,24 +18,17 @@ The agent that you will create will hit the `/webhooks/phonic-config` endpoint t
 
 ### 2.1 Install Dependencies
 
-Navigate to the Python examples directory:
-
+Navigate to the conversation webhook example directory:
 ```bash
-cd phonic-examples/python
+cd phonic-examples/conversation-webhook/python
 ```
 
 Install dependencies using uv:
-
 ```bash
-uv sync
+uv sync --all-extras
 ```
 
-Install and run ngrok to expose port 3000:
-
-```bash
-npm install -g ngrok
-ngrok http 3000
-```
+Follow the ngrok setup instructions [here](https://github.com/Phonic-Co/phonic-examples/blob/main/ngrok_tunneling.md).
 
 ### 2.2 Enable Webhook Events
 
@@ -44,26 +37,25 @@ Enable webhook events in the Phonic UI. Navigate to the [Webhooks](https://phoni
 - conversation.analysis
 - conversation.ended
 
+In the endpoint field, type in your ngrok URL, followed by `/webhooks/events`.
+
 ### 2.3 Configure Environment
 
-Create an `.env.local` file in the examples root (`phonic-examples/python/.env.local`) with:
-
+Create an `.env.local` file and fill it with:
 ```dotenv
-PHONIC_API_KEY="your_api_key"
-PHONIC_WEBHOOK_SECRET="your_webhook_secret" # Found in the Webhooks tab in the Phonic UI
+PHONIC_API_KEY="ph_..."
+PHONIC_WEBHOOK_SECRET="whsec_..." # Found in the Webhooks tab in the Phonic UI
 PHONIC_CONFIG_WEBHOOK_AUTHORIZATION="Bearer your_auth_key"
-NGROK_URL="https://your-ngrok-url.ngrok.io" # Your server's public URL
-CUSTOMER_PHONE_NUMBER="+15551234567" # Phone number to call
+NGROK_URL="https://your-ngrok-url.ngrok-free.app"
+CUSTOMER_PHONE_NUMBER="+15551234567"
 ```
-
-Copy the public URL (e.g., `https://abc123.ngrok.io`) and add it to your `.env.local` as `NGROK_URL`.
+Your phone number must include the leading `+` and country code, and must not contain dashes or spaces.
 
 ## 3. Create the Agent
 
 First, create the Phonic agent and tool:
-
 ```bash
-uv run python conversation-webhook/create_agent.py
+uv run create_agent.py
 ```
 
 This creates an agent with a custom webhook tool that will call your server.
@@ -71,7 +63,7 @@ This creates an agent with a custom webhook tool that will call your server.
 ## 4. Start the Webhook Server
 
 ```bash
-uv run python conversation-webhook/server.py
+uv run server.py
 ```
 
 This starts a FastAPI server with three endpoints:
@@ -83,5 +75,5 @@ This starts a FastAPI server with three endpoints:
 ## 5. Make an Outbound Call
 
 ```bash
-uv run python conversation-webhook/outbound_call.py
+uv run outbound_call.py
 ```

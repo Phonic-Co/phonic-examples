@@ -6,7 +6,7 @@ config({ path: ".env.local" });
 const apiKey = process.env.PHONIC_API_KEY;
 const configWebhookAuthorization =
   process.env.PHONIC_CONFIG_WEBHOOK_AUTHORIZATION ?? "Bearer authorization_key";
-const NGROK_URL = process.env.NGROK_URL;
+const NGROK_URL = process.env.NGROK_URL as string;
 
 const client = new PhonicClient({ apiKey });
 
@@ -18,7 +18,7 @@ async function createTool() {
     type: "custom_webhook",
     execution_mode: "sync",
     endpoint_method: "POST",
-    endpoint_url: `https://${NGROK_URL}/webhooks/add-destination`,
+    endpoint_url: `https://${NGROK_URL.replace("https://", "")}/webhooks/add-destination`,
     endpoint_timeout_ms: 7000,
     parameters: [
       {
@@ -46,7 +46,7 @@ async function createAgent() {
     system_prompt:
       "You are an expert in San Francisco, helping users understand where best to visit. Convince the customer to visit the Golden Gate Bridge. The customer's name is {{customer_name}}. The current time is {{system_time}}. The user interested in {{interest}}. After the user says they will visit the destination, add it to the list of destinations.",
     configuration_endpoint: {
-      url: `https://${NGROK_URL}/webhooks/phonic-config`,
+      url: `https://${NGROK_URL.replace("https://", "")}/webhooks/phonic-config`,
       headers: { Authorization: configWebhookAuthorization },
       timeout_ms: 7000,
     },
