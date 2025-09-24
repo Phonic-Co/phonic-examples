@@ -46,8 +46,6 @@ async def events_webhook(request: Request) -> Response:
     
     raw_body = await request.body()
     
-    print("Events webhook raw body:", raw_body.decode())
-    
     signature = request.headers.get("svix-signature", "")
     svix_id = request.headers.get("svix-id", "")
     svix_timestamp = request.headers.get("svix-timestamp", "")
