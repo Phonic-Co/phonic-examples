@@ -31,6 +31,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     queue: asyncio.Queue = asyncio.Queue()
     stream_sid = None
+    conversation_created = asyncio.Event()
 
     async def receive_from_phonic(message: ConversationsSocketClientResponse):
         # Handler that sends Phonic response to Twilio
@@ -43,6 +44,8 @@ async def websocket_endpoint(websocket: WebSocket):
                         "media": {"payload": message.audio},
                     }
                     await websocket.send_json(sending)
+                case "conversation_created":
+                    conversation_created.set()
 
     async def send_to_phonic():
         async with client.conversations.connect() as socket:
@@ -81,8 +84,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     stream_sid = data["streamSid"]
 
                 if data["event"] == "media":
-                    payload = data["media"]["payload"]
-                    await queue.put(AudioChunkPayload(audio=payload))
+                    if conversation_created.is_set():
+                        payload = data["media"]["payload"]
+                        await queue.put(AudioChunkPayload(audio=payload))
                 if data["event"] == "closed":
                     break
 

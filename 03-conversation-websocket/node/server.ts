@@ -31,6 +31,7 @@ app.get(
       ReturnType<typeof phonicClient.conversations.connect>
     > | null = null;
     let streamSid: string | null = null;
+    let conversationCreated = false;
 
     const sendToTwilio = (ws: WSContext, data: unknown) => {
       ws.send(JSON.stringify(data));
@@ -53,6 +54,10 @@ app.get(
                     payload: message.audio,
                   },
                 });
+                break;
+
+              case "conversation_created":
+                conversationCreated = true;
                 break;
 
               case "error":
@@ -96,7 +101,11 @@ app.get(
               break;
 
             case "media":
-              if (phonicSocket && data.media.track === "inbound") {
+              if (
+                phonicSocket &&
+                conversationCreated &&
+                data.media.track === "inbound"
+              ) {
                 await phonicSocket.sendAudioChunk({
                   type: "audio_chunk",
                   audio: data.media.payload,
