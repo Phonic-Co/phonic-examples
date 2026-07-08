@@ -13,6 +13,8 @@ cd phonic-examples/quick-start/python
 uv sync --all-extras
 ```
 
+> **Note:** These examples pin Python 3.11 via `.python-version`. If it isn't installed, run `uv python install 3.11` — `uv` then uses it automatically. (Newer Python versions can fail to build `pydantic-core` from source.)
+
 To set up your environment variables:
 1. Obtain a Phonic API Key by visiting the [Phonic API Keys](https://phonic.co/api-keys) page and creating an API key.
 2. Create an `.env.local` file with the following content:

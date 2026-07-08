@@ -8,6 +8,8 @@ cd phonic-examples/conversation-websocket-tools/python
 uv sync
 ```
 
+> **Note:** These examples pin Python 3.11 via `.python-version`. If it isn't installed, run `uv python install 3.11` — `uv` then uses it automatically. (Newer Python versions can fail to build `pydantic-core` from source.)
+
 Follow the ngrok setup instructions [here](https://github.com/Phonic-Co/phonic-examples/blob/main/ngrok_tunneling.md).
 Retrieve your Twilio credentials following
 [this](https://www.twilio.com/docs/voice/tutorials/how-to-make-outbound-phone-calls/python#retrieve-your-twilio-account-credentials).

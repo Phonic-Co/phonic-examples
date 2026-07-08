@@ -14,7 +14,7 @@ We demonstrate using an Authorization header to secure the `/webhooks/phonic-con
 
 ## 1. Prerequisites
 
-- Python 3.11+ installed
+- Python 3.11 installed (pinned via `.python-version`; run `uv python install 3.11` if needed)
 - [Phonic](https://phonic.co) API key for voice processing
 - [ngrok](https://ngrok.com) for exposing your local server to the internet
 
