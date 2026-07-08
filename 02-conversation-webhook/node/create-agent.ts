@@ -26,6 +26,7 @@ async function createTool() {
         description: "The name of the destination",
         is_required: true,
         type: "string",
+        location: "query_string",
       },
     ],
   });

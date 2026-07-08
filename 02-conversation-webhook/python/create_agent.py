@@ -28,6 +28,7 @@ def create_tool():
                 "description": "The name of the destination",
                 "is_required": True,
                 "type": "string",
+                "location": "query_string",
             }
         ],
     )
