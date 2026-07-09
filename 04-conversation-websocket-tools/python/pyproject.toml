@@ -9,7 +9,7 @@ dependencies = [
     "fast-flights==2.2",
     "fastapi==0.117.1",
     "isort==6.0.1",
-    "phonic==0.30.7",
+    "phonic==0.32.8",
     "python-dotenv==1.1.1",
     "twilio==9.8.1",
     "uvicorn==0.32.0",
