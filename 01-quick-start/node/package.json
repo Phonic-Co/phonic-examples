@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "dotenv": "16.5.0",
-    "phonic": "0.32.8"
+    "phonic": "0.32.9"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
