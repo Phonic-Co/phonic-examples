@@ -3,7 +3,7 @@ import { createNodeWebSocket } from "@hono/node-ws";
 import { type Context, Hono } from "hono";
 import type { WSContext } from "hono/ws";
 import { type Phonic, PhonicClient } from "phonic";
-import { phonicApiKey, port } from "./env-vars";
+import { phonicApiKey, port, telnyxApiKey } from "./env-vars";
 import type { TelnyxWebSocketMessage } from "./types";
 
 const app = new Hono();
@@ -38,6 +38,48 @@ const inboundHandler = (c: Context) => {
 
 app.get("/inbound", inboundHandler);
 app.post("/inbound", inboundHandler);
+
+// Call Control webhook for OUTBOUND calls (see outbound-call.ts). Telnyx posts
+// call lifecycle events here; when the callee answers we start a bidirectional
+// media stream. This MUST happen via streaming_start after answer — passing
+// stream params to the dial request does not establish the return-audio path.
+app.post("/call-control", async (c) => {
+  const url = new URL(c.req.url);
+  const body = (await c.req.json()) as {
+    data?: { event_type?: string; payload?: { call_control_id?: string } };
+  };
+  const eventType = body.data?.event_type;
+  const callControlId = body.data?.payload?.call_control_id;
+
+  if (eventType === "call.answered" && callControlId) {
+    const response = await fetch(
+      `https://api.telnyx.com/v2/calls/${callControlId}/actions/streaming_start`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${telnyxApiKey}`,
+          "Content-Type": "application/json",
+        },
+        // No stream_track: a bidirectional stream forks the caller's audio by
+        // default. bidirectional_codec must match the agent (PCMU == mulaw_8000).
+        body: JSON.stringify({
+          stream_url: `wss://${url.host}/ws`,
+          stream_bidirectional_mode: "rtp",
+          stream_bidirectional_codec: "PCMU",
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      console.error(
+        `streaming_start failed: ${response.status}`,
+        await response.text(),
+      );
+    }
+  }
+
+  return c.body(null, 200);
+});
 
 app.get(
   "/ws",
@@ -80,11 +122,15 @@ app.get(
           phonicSocket = await phonicClient.conversations.connect();
 
           phonicSocket.on("message", (message) => {
-            if (!streamId) return;
-
             switch (message.type) {
               case "audio_chunk":
-                sendToTelnyx(ws, message.audio);
+                // Only forward once Telnyx's "start" has set streamId — it
+                // won't accept media before then. Do NOT gate the whole
+                // handler on streamId: conversation_created often arrives
+                // before "start", and dropping it stalls inbound forwarding.
+                if (streamId) {
+                  sendToTelnyx(ws, message.audio);
+                }
                 break;
 
               case "conversation_created":

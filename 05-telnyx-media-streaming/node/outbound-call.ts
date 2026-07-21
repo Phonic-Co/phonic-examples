@@ -9,17 +9,12 @@ import {
 
 requireOutboundEnvVars();
 
-// Places an outbound call with the Telnyx Call Control API and starts
-// bidirectional media streaming in the same request. This is the Call Control
-// equivalent of the TeXML <Stream> in server.ts, for numbers on a Voice API
-// application rather than a TeXML application.
-//
-// The stream_bidirectional_* fields are the audio-back-to-Telnyx switch. Drop
-// them and Telnyx will forward caller audio to Phonic but play nothing the
-// agent says.
+// Places an outbound call with the Telnyx Call Control API (Voice API
+// application). Streaming is NOT started here: bidirectional return audio has
+// to be set up with streaming_start AFTER the call is answered, so we point
+// Telnyx's call webhooks at /call-control and server.ts starts the stream on
+// the call.answered event.
 async function makeCall() {
-  const wsUrl = `wss://${ngrokUrl.replace("https://", "")}/ws`;
-
   const response = await fetch("https://api.telnyx.com/v2/calls", {
     method: "POST",
     headers: {
@@ -30,10 +25,9 @@ async function makeCall() {
       connection_id: telnyxConnectionId,
       to: customerPhoneNumber,
       from: telnyxPhoneNumber,
-      stream_url: wsUrl,
-      stream_track: "inbound_track",
-      stream_bidirectional_mode: "rtp",
-      stream_bidirectional_codec: "PCMU",
+      // Per-call webhook override, so you don't have to configure the
+      // application's webhook URL in the portal.
+      webhook_url: `${ngrokUrl}/call-control`,
     }),
   });
 

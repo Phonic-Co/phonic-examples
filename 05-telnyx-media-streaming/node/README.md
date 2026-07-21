@@ -86,12 +86,18 @@ Telnyx starts a media stream from either a TeXML application or a Voice API
    POST — the endpoint accepts both).
 3. Assign your phone number to this application.
 
-### Option B — Voice API / Call Control application
+### Option B — Voice API / Call Control application (outbound)
 
-`outbound-call.ts` shows the exact dial request. For inbound on a Call Control
-app you'd answer the call and issue a `streaming_start` command with the same
-`stream_url` / `stream_bidirectional_mode` / `stream_bidirectional_codec`
-fields shown there.
+For `outbound-call.ts` you need a **Voice API application** (its id is
+`TELNYX_CONNECTION_ID`), and `TELNYX_PHONE_NUMBER` must be able to place calls
+on it. You do **not** need to configure the app's webhook in the portal — the
+dial request sets a per-call `webhook_url` pointing at `/call-control`.
+
+The flow: dial (`outbound-call.ts`) → Telnyx posts `call.answered` to
+`/call-control` → the server issues `streaming_start` with
+`stream_bidirectional_mode: "rtp"`. Streaming is started **after** answer on
+purpose: putting the stream params on the dial request forks the audio but does
+**not** establish the bidirectional return path, so the caller hears nothing.
 
 ## 4. Create the agent
 
