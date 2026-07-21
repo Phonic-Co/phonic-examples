@@ -4,6 +4,9 @@ dotenv.config({ path: ".env.local" });
 
 export const phonicApiKey = process.env.PHONIC_API_KEY as string;
 export const ngrokUrl = process.env.NGROK_URL as string;
+// Port the server listens on. Set PORT to match whatever your ngrok tunnel
+// forwards to (e.g. `ngrok http 3000`). Defaults to 3000.
+export const port = Number(process.env.PORT) || 3000;
 export const telnyxApiKey = process.env.TELNYX_API_KEY as string;
 export const telnyxConnectionId = process.env.TELNYX_CONNECTION_ID as string;
 export const telnyxPhoneNumber = process.env.TELNYX_PHONE_NUMBER as string;

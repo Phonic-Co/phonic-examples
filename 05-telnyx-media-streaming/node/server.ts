@@ -3,7 +3,7 @@ import { createNodeWebSocket } from "@hono/node-ws";
 import { type Context, Hono } from "hono";
 import type { WSContext } from "hono/ws";
 import { type Phonic, PhonicClient } from "phonic";
-import { phonicApiKey } from "./env-vars";
+import { phonicApiKey, port } from "./env-vars";
 import type { TelnyxWebSocketMessage } from "./types";
 
 const app = new Hono();
@@ -13,12 +13,17 @@ const phonicClient = new PhonicClient({
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
-// TeXML returned for inbound calls. The important part is bidirectionalMode:
-// without it Telnyx streams caller audio to us but IGNORES anything we send
-// back, so the agent is heard by nobody. bidirectionalCodec must match the
-// agent's audio_format (PCMU 8 kHz == mulaw_8000).
-// Registered for both GET and POST so it works regardless of the "Voice
-// Method" you pick when configuring the TeXML application in the portal.
+// TeXML returned for inbound calls, registered for both GET and POST so it
+// works with either "Voice Method" you set on the TeXML application.
+//
+// Two things here are load-bearing:
+//   - bidirectionalMode="rtp" is what lets us send the agent's audio BACK to
+//     the caller. Without it Telnyx forwards caller audio to us but plays
+//     nothing we send.
+//   - bidirectionalCodec must match the agent's audio_format (PCMU 8 kHz ==
+//     mulaw_8000).
+// Do NOT add a track="..." attribute: on a bidirectional <Connect><Stream> it
+// makes Telnyx stop forwarding the caller's inbound audio entirely.
 const inboundHandler = (c: Context) => {
   const url = new URL(c.req.url);
   const texml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -141,16 +146,10 @@ app.get(
 
             case "media":
               // A bidirectional <Connect><Stream> forks only the caller's
-              // (inbound) audio by default, so forward every media frame. Do
-              // NOT filter on media.track === "inbound" — that's Twilio's value
-              // (Telnyx uses "inbound_track"), and adding a track="" attribute
-              // to a bidirectional stream stops Telnyx sending inbound at all.
+              // audio, so forward every media frame. Don't filter on
+              // media.track === "inbound" — that's Twilio's value; Telnyx sends
+              // "inbound_track".
               if (phonicSocket && conversationCreated) {
-                if (framesFromTelnyx === 0) {
-                  console.log(
-                    `First inbound media frame (track="${data.media.track}")`,
-                  );
-                }
                 framesFromTelnyx += 1;
                 await phonicSocket.sendAudioChunk({
                   type: "audio_chunk",
@@ -192,7 +191,6 @@ app.get(
   }),
 );
 
-const port = 3000;
 const server = serve({
   fetch: app.fetch,
   port,

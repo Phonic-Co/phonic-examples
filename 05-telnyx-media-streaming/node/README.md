@@ -47,8 +47,11 @@ npm install
 ```
 
 Follow the ngrok setup instructions
-[here](https://github.com/Phonic-Co/phonic-examples/blob/main/ngrok_tunneling.md)
-(use port `3000`).
+[here](https://github.com/Phonic-Co/phonic-examples/blob/main/ngrok_tunneling.md).
+The server listens on `3000` by default — run `ngrok http 3000`, or set `PORT`
+to match your tunnel. **The ngrok port and the server port must agree**, or
+nothing reaches your code. A reserved ngrok domain (`ngrok http --domain=…`)
+saves you from re-editing the webhook URL every restart.
 
 ## 2. Configure environment
 
@@ -58,6 +61,9 @@ Create an `.env.local` file:
 PHONIC_API_KEY="ph_..."
 NGROK_URL="https://your-ngrok-url.ngrok-free.app"
 TELNYX_API_KEY="KEY..."
+
+# Optional — defaults to 3000:
+PORT="3000"
 
 # Only needed for outbound-call.ts:
 TELNYX_CONNECTION_ID="your Voice API / Call Control connection id"
@@ -121,41 +127,67 @@ The server prints a live counter every 2 seconds:
   the server but Telnyx is dropping them. This is the bidirectional-mode
   problem below.
 
+## Porting from a Twilio integration? Read this first
+
+Telnyx's media streaming looks Twilio-compatible but differs in ways that cause
+silent, one-way, or dead audio. If you copied a Twilio bridge, check these:
+
+| | Twilio | Telnyx |
+| --- | --- | --- |
+| Enable return audio | automatic with `<Connect><Stream>` | **must** set `bidirectionalMode="rtp"` |
+| Frame you send back | `{event, streamSid, media:{payload}}` | `{event:"media", media:{payload}}` — **no** stream id |
+| Stream id field (inbound) | `streamSid` | `stream_id` |
+| Media `track` value | `"inbound"` | `"inbound_track"` — so don't filter on `"inbound"` |
+| `track="..."` on the stream | fine | **omit it** on a bidirectional `<Connect><Stream>` — it stops inbound audio |
+
 ## Troubleshooting
 
-### Agent can't be heard (audio from Phonic → Telnyx)
+### Agent can't be heard (Phonic → Telnyx audio missing)
 
-In order of likelihood:
-
-1. **Bidirectional mode is off.** The stream must be started with
-   `bidirectionalMode="rtp"` (TeXML) or `stream_bidirectional_mode: "rtp"`
-   (Call Control). Without it, Telnyx accepts your WebSocket but silently
-   discards outbound media. This is the single most common cause.
+1. **Bidirectional mode is off.** The stream must set `bidirectionalMode="rtp"`
+   (TeXML) / `stream_bidirectional_mode: "rtp"` (Call Control). Without it Telnyx
+   accepts the WebSocket but silently discards everything you send back. Most
+   common cause.
 2. **Codec mismatch.** `bidirectionalCodec` / `stream_bidirectional_codec` must
-   be `PCMU`, and the Phonic agent's `output_format` must be `mulaw_8000`. A
-   mismatch produces silence or static, not an error.
-3. **Wrong outbound frame shape.** The frame you send back must be exactly
-   `{"event":"media","media":{"payload":"<base64 PCMU>"}}`. Do **not** copy the
-   Twilio format — Telnyx does not want a `streamSid`/`stream_id` on the media
-   frames you send, and the caller-audio field is `stream_id` (snake_case), not
-   `streamSid`.
-4. **You started the stream with `<Start>` instead of `<Connect>`, or set the
-   track wrong.** Use `<Connect><Stream>` for a full-duration agent.
+   be `PCMU`, and the agent's `output_format` must be `mulaw_8000`. Mismatch =
+   silence or static, no error.
+3. **Wrong outbound frame shape.** Send exactly
+   `{"event":"media","media":{"payload":"<base64 PCMU>"}}`. Don't attach a
+   `streamSid`/`stream_id` (that's a Twilio habit).
 
-### Caller can't be heard (audio from Telnyx → Phonic)
+### Caller can't be heard (`Telnyx->Phonic` counter stuck at 0)
 
-- `Telnyx->Phonic` counter stuck at 0: confirm the media `track` is `inbound`
-  and that `conversation_created` arrived from Phonic before audio is forwarded
-  (the server already guards on both).
-- Confirm `input_format: "mulaw_8000"` in the Phonic config matches the PCMU the
-  stream delivers.
+1. **A `track="..."` attribute on the `<Connect><Stream>`.** This is the big
+   one. `track` belongs to the unidirectional `<Start><Stream>` fork; on a
+   bidirectional `<Connect><Stream>` it makes Telnyx stop forwarding the
+   caller's audio — you'll receive `connected`/`start`/`stop` but **zero**
+   `media` events. Remove it (this example does).
+2. **Filtering on `media.track === "inbound"`.** Telnyx sends `"inbound_track"`,
+   so a Twilio-style filter drops every frame. This example forwards all media.
+3. **`input_format` mismatch** — must be `mulaw_8000` to match the PCMU stream.
 
-### Nothing connects at all
+> Quick diagnosis: if the log shows only `connected`/`start`/`stop` and no
+> media, Telnyx isn't forwarding inbound audio → cause #1. If media arrives but
+> Phonic is silent → cause #2/#3.
 
-- ngrok URL in `NGROK_URL` / the TeXML app must match the currently running
-  tunnel, and use `wss://` for the stream URL (the code derives this for you).
-- Check the Telnyx **Debugging → WebSocket / Call** logs in the portal for
-  handshake or codec errors.
+### `Error: Socket is not open` on connect
+
+`conversations.connect()` resolves before the WebSocket finishes opening, so
+calling `sendConfig()` immediately throws. Send the config from the socket's
+`open` event (or guard on `readyState`) — this example does both.
+
+### Call fast-busies / nothing reaches the server
+
+- **ngrok/port mismatch or a stale webhook URL.** ngrok subdomains rotate on
+  every restart; the TeXML app's webhook must point at the *current* URL, and
+  the ngrok port must match the server `PORT`. Confirm with
+  `curl -i https://<ngrok>/inbound` — you should get the `<Response>` XML, not
+  an ngrok warning page.
+- **Trial account restrictions.** Telnyx trials only allow calls to/from
+  **verified** numbers. Verify your phone (or leave trial) or you'll get a
+  fast-busy before any webhook fires.
+- **Number not on the right connection.** The number must be assigned to your
+  **TeXML application**, not a SIP connection.
 
 ## References
 
