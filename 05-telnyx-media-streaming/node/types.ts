@@ -24,7 +24,7 @@ export type TelnyxWebSocketMessage =
       sequence_number: string;
       stream_id: string;
       media: {
-        track: "inbound" | "outbound";
+        track: "inbound_track" | "outbound_track";
         chunk: string;
         timestamp: string;
         payload: string;

@@ -24,7 +24,7 @@ const inboundHandler = (c: Context) => {
   const texml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Connect>
-    <Stream url="wss://${url.host}/ws" bidirectionalMode="rtp" bidirectionalCodec="PCMU" />
+    <Stream url="wss://${url.host}/ws" track="inbound_track" bidirectionalMode="rtp" bidirectionalCodec="PCMU" />
   </Connect>
 </Response>`;
 
@@ -140,11 +140,15 @@ app.get(
               break;
 
             case "media":
-              if (
-                phonicSocket &&
-                conversationCreated &&
-                data.media.track === "inbound"
-              ) {
+              // Telnyx labels the caller track "inbound_track" (Twilio uses
+              // "inbound"). The <Stream track="inbound_track"> above already
+              // limits us to the caller's audio, so forward every media frame.
+              if (phonicSocket && conversationCreated) {
+                if (framesFromTelnyx === 0) {
+                  console.log(
+                    `First inbound media frame (track="${data.media.track}")`,
+                  );
+                }
                 framesFromTelnyx += 1;
                 await phonicSocket.sendAudioChunk({
                   type: "audio_chunk",
