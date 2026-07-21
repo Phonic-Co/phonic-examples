@@ -102,12 +102,24 @@ app.get(
             console.error(`Error from Phonic WebSocket: ${error.message}`);
           });
 
-          await phonicSocket.sendConfig({
-            type: "config",
-            agent: "agent-telnyx",
-            input_format: "mulaw_8000",
-            output_format: "mulaw_8000",
-          } as Phonic.ConfigPayload);
+          // connect() resolves before the socket has finished opening, so
+          // sending immediately throws "Socket is not open". Send the config
+          // once the socket is open (or right away if it already is).
+          const sendInitialConfig = () => {
+            phonicSocket?.sendConfig({
+              type: "config",
+              agent: "agent-telnyx",
+              input_format: "mulaw_8000",
+              output_format: "mulaw_8000",
+            } as Phonic.ConfigPayload);
+          };
+
+          const WS_OPEN = 1;
+          if (phonicSocket.readyState === WS_OPEN) {
+            sendInitialConfig();
+          } else {
+            phonicSocket.on("open", sendInitialConfig);
+          }
         } catch (error) {
           console.error("Failed to connect to Phonic:", error);
           ws.close();
