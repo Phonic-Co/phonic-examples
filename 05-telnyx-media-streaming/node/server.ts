@@ -24,7 +24,7 @@ const inboundHandler = (c: Context) => {
   const texml = `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Connect>
-    <Stream url="wss://${url.host}/ws" track="inbound_track" bidirectionalMode="rtp" bidirectionalCodec="PCMU" />
+    <Stream url="wss://${url.host}/ws" bidirectionalMode="rtp" bidirectionalCodec="PCMU" />
   </Connect>
 </Response>`;
 
@@ -140,9 +140,11 @@ app.get(
               break;
 
             case "media":
-              // Telnyx labels the caller track "inbound_track" (Twilio uses
-              // "inbound"). The <Stream track="inbound_track"> above already
-              // limits us to the caller's audio, so forward every media frame.
+              // A bidirectional <Connect><Stream> forks only the caller's
+              // (inbound) audio by default, so forward every media frame. Do
+              // NOT filter on media.track === "inbound" — that's Twilio's value
+              // (Telnyx uses "inbound_track"), and adding a track="" attribute
+              // to a bidirectional stream stops Telnyx sending inbound at all.
               if (phonicSocket && conversationCreated) {
                 if (framesFromTelnyx === 0) {
                   console.log(
