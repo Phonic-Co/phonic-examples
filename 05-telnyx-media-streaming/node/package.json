@@ -1,5 +1,5 @@
 {
-  "name": "telnyx-sip-trunking-node",
+  "name": "telnyx-media-streaming-node",
   "version": "0.1.0",
   "private": true,
   "scripts": {

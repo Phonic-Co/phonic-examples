@@ -11,8 +11,8 @@ requireOutboundEnvVars();
 
 // Places an outbound call with the Telnyx Call Control API and starts
 // bidirectional media streaming in the same request. This is the Call Control
-// equivalent of the TeXML <Stream> in server.ts, and it is what you'd use with
-// a SIP-trunk / Voice API connection rather than a TeXML application.
+// equivalent of the TeXML <Stream> in server.ts, for numbers on a Voice API
+// application rather than a TeXML application.
 //
 // The stream_bidirectional_* fields are the audio-back-to-Telnyx switch. Drop
 // them and Telnyx will forward caller audio to Phonic but play nothing the

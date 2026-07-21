@@ -1,4 +1,4 @@
-# Telnyx + SIP Trunking Example (Node)
+# Telnyx Media Streaming Example (Node)
 
 Bridge a Telnyx call to a Phonic agent over WebSockets and verify that audio
 flows **both** directions: caller → Phonic (transcription) and Phonic → caller
@@ -6,6 +6,15 @@ flows **both** directions: caller → Phonic (transcription) and Phonic → call
 
 > **If the agent can't be heard, jump to [Troubleshooting](#troubleshooting).**
 > 99% of the time it's that Telnyx bidirectional streaming was never turned on.
+
+> **Media streaming vs. SIP trunking.** This example uses Telnyx *media
+> streaming*: the call's audio is forked over a WebSocket to this server, which
+> relays it to Phonic. That is different from *SIP trunking*, where you point a
+> Telnyx SIP trunk directly at Phonic's SIP URI and Phonic handles the RTP
+> itself with no bridge. Use this example when your own code touches the audio.
+> If you instead want a SIP trunk straight into Phonic, you don't need this repo
+> — see Phonic's `add-custom-phone-number` and `/conversations/sip/outbound_call`
+> APIs.
 
 ## How it works
 
@@ -33,7 +42,7 @@ stream is inbound-only.
 ## 1. Setup
 
 ```bash
-cd phonic-examples/05-telnyx-sip-trunking/node
+cd phonic-examples/05-telnyx-media-streaming/node
 npm install
 ```
 
@@ -61,22 +70,22 @@ spaces.
 
 ## 3. Point Telnyx at your server
 
-You'll use one of two connection types depending on how you're set up.
+Telnyx starts a media stream from either a TeXML application or a Voice API
+(Call Control) application. Pick whichever your number is already on.
 
-### Option A — TeXML application (mirrors the inbound flow here)
+### Option A — TeXML application (drives the inbound flow here)
 
 1. In the Telnyx portal, create a **TeXML Application**.
-2. Set its **Voice Method** webhook (inbound) to `POST {NGROK_URL}/inbound`.
-3. Assign your phone number (or SIP trunk's inbound routing) to this
-   application.
+2. Set its **Voice Method** webhook (inbound) to `{NGROK_URL}/inbound` (GET or
+   POST — the endpoint accepts both).
+3. Assign your phone number to this application.
 
-### Option B — SIP trunk / Voice API (Call Control)
+### Option B — Voice API / Call Control application
 
-If your number lives on a **SIP Connection / Voice API** application, you drive
-streaming from Call Control instead of TeXML. `outbound-call.ts` shows the exact
-dial request; for inbound you'd answer the call and issue a `streaming_start`
-command with the same `stream_bidirectional_mode` / `stream_bidirectional_codec`
-fields.
+`outbound-call.ts` shows the exact dial request. For inbound on a Call Control
+app you'd answer the call and issue a `streaming_start` command with the same
+`stream_url` / `stream_bidirectional_mode` / `stream_bidirectional_codec`
+fields shown there.
 
 ## 4. Create the agent
 
