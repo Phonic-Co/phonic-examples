@@ -13,17 +13,11 @@ const phonicClient = new PhonicClient({
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
-// TeXML returned for inbound calls, registered for both GET and POST so it
-// works with either "Voice Method" you set on the TeXML application.
-//
-// Two things here are load-bearing:
-//   - bidirectionalMode="rtp" is what lets us send the agent's audio BACK to
-//     the caller. Without it Telnyx forwards caller audio to us but plays
-//     nothing we send.
-//   - bidirectionalCodec must match the agent's audio_format (PCMU 8 kHz ==
-//     mulaw_8000).
-// Do NOT add a track="..." attribute: on a bidirectional <Connect><Stream> it
-// makes Telnyx stop forwarding the caller's inbound audio entirely.
+// bidirectionalMode="rtp" is what lets us send the agent's audio back to the
+// caller; bidirectionalCodec must match the agent's audio_format (PCMU ==
+// mulaw_8000). Don't add a track="..." attribute — on a bidirectional
+// <Connect><Stream> it stops Telnyx forwarding the caller's inbound audio.
+// Registered for GET and POST to match either "Voice Method" on the app.
 const inboundHandler = (c: Context) => {
   const url = new URL(c.req.url);
   const texml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -39,19 +33,17 @@ const inboundHandler = (c: Context) => {
 app.get("/inbound", inboundHandler);
 app.post("/inbound", inboundHandler);
 
-// Call Control webhook for OUTBOUND calls (see outbound-call.ts). Telnyx posts
-// call lifecycle events here; when the callee answers we start a bidirectional
-// media stream. This MUST happen via streaming_start after answer — passing
-// stream params to the dial request does not establish the return-audio path.
+// Outbound calls (see outbound-call.ts): start the stream on answer. This must
+// use streaming_start after answer — stream params on the dial request don't
+// establish the return-audio path.
 app.post("/call-control", async (c) => {
   const url = new URL(c.req.url);
   const body = (await c.req.json()) as {
     data?: { event_type?: string; payload?: { call_control_id?: string } };
   };
-  const eventType = body.data?.event_type;
   const callControlId = body.data?.payload?.call_control_id;
 
-  if (eventType === "call.answered" && callControlId) {
+  if (body.data?.event_type === "call.answered" && callControlId) {
     const response = await fetch(
       `https://api.telnyx.com/v2/calls/${callControlId}/actions/streaming_start`,
       {
@@ -60,8 +52,6 @@ app.post("/call-control", async (c) => {
           Authorization: `Bearer ${telnyxApiKey}`,
           "Content-Type": "application/json",
         },
-        // No stream_track: a bidirectional stream forks the caller's audio by
-        // default. bidirectional_codec must match the agent (PCMU == mulaw_8000).
         body: JSON.stringify({
           stream_url: `wss://${url.host}/ws`,
           stream_bidirectional_mode: "rtp",
@@ -90,30 +80,11 @@ app.get(
     let streamId: string | null = null;
     let conversationCreated = false;
 
-    // Frame counters so you can confirm audio flows BOTH ways. Watch the log:
-    // fromTelnyx should climb while the caller speaks, and toTelnyx should
-    // climb while the agent speaks. If toTelnyx climbs but the caller hears
-    // nothing, bidirectionalMode is not set on the Telnyx side.
-    let framesFromTelnyx = 0;
-    let framesToTelnyx = 0;
-    const statsTimer = setInterval(() => {
-      console.log(
-        `[audio] Telnyx->Phonic: ${framesFromTelnyx} frames | Phonic->Telnyx: ${framesToTelnyx} frames`,
-      );
-    }, 2000);
-
     const sendToTelnyx = (ws: WSContext, base64Audio: string) => {
-      // Telnyx bidirectional media frame. Unlike Twilio, do NOT include a
-      // stream id here — just event + media.payload (base64 PCMU).
+      // Telnyx media frame: event + media.payload only, no stream id.
       ws.send(
-        JSON.stringify({
-          event: "media",
-          media: {
-            payload: base64Audio,
-          },
-        }),
+        JSON.stringify({ event: "media", media: { payload: base64Audio } }),
       );
-      framesToTelnyx += 1;
     };
 
     return {
@@ -124,10 +95,8 @@ app.get(
           phonicSocket.on("message", (message) => {
             switch (message.type) {
               case "audio_chunk":
-                // Only forward once Telnyx's "start" has set streamId — it
-                // won't accept media before then. Do NOT gate the whole
-                // handler on streamId: conversation_created often arrives
-                // before "start", and dropping it stalls inbound forwarding.
+                // Only send once Telnyx's "start" has set streamId. Don't gate
+                // conversation_created on it — that message can arrive first.
                 if (streamId) {
                   sendToTelnyx(ws, message.audio);
                 }
@@ -153,9 +122,8 @@ app.get(
             console.error(`Error from Phonic WebSocket: ${error.message}`);
           });
 
-          // connect() resolves before the socket has finished opening, so
-          // sending immediately throws "Socket is not open". Send the config
-          // once the socket is open (or right away if it already is).
+          // connect() resolves before the socket is open, so send the config on
+          // the open event (or right away if it is already open).
           const sendInitialConfig = () => {
             phonicSocket?.sendConfig({
               type: "config",
@@ -187,16 +155,12 @@ app.get(
           switch (data.event) {
             case "start":
               streamId = data.stream_id;
-              console.log(`Telnyx stream started: ${streamId}`);
               break;
 
             case "media":
-              // A bidirectional <Connect><Stream> forks only the caller's
-              // audio, so forward every media frame. Don't filter on
-              // media.track === "inbound" — that's Twilio's value; Telnyx sends
-              // "inbound_track".
+              // A bidirectional stream forks only the caller's audio, so
+              // forward every frame (don't filter on media.track).
               if (phonicSocket && conversationCreated) {
-                framesFromTelnyx += 1;
                 await phonicSocket.sendAudioChunk({
                   type: "audio_chunk",
                   audio: data.media.payload,
@@ -221,10 +185,7 @@ app.get(
       },
 
       onClose() {
-        clearInterval(statsTimer);
-        console.log(
-          `Telnyx WebSocket closed. Final counts -> Telnyx->Phonic: ${framesFromTelnyx}, Phonic->Telnyx: ${framesToTelnyx}`,
-        );
+        console.log("Telnyx WebSocket closed");
         if (phonicSocket) {
           phonicSocket.close();
         }

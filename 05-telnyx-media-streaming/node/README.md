@@ -116,22 +116,8 @@ npm run start
 - **Inbound:** call your Telnyx number.
 - **Outbound:** `npm run outbound-call`.
 
-## Verifying audio flows both ways
-
-The server prints a live counter every 2 seconds:
-
-```
-[audio] Telnyx->Phonic: 143 frames | Phonic->Telnyx: 98 frames
-```
-
-- **`Telnyx->Phonic` climbing while you speak** → inbound audio is reaching
-  Phonic. If this stays at 0, Telnyx isn't streaming caller audio to you (check
-  the webhook / stream URL and that the call actually connected).
-- **`Phonic->Telnyx` climbing while the agent speaks** → Phonic is producing
-  audio and we're sending it to Telnyx.
-- **`Phonic->Telnyx` climbing but you hear nothing** → the frames are leaving
-  the server but Telnyx is dropping them. This is the bidirectional-mode
-  problem below.
+A working call is two-way: you hear the agent's welcome message, and the agent
+responds to what you say. If only one direction works, see Troubleshooting.
 
 ## Porting from a Twilio integration? Read this first
 
@@ -161,7 +147,7 @@ silent, one-way, or dead audio. If you copied a Twilio bridge, check these:
    `{"event":"media","media":{"payload":"<base64 PCMU>"}}`. Don't attach a
    `streamSid`/`stream_id` (that's a Twilio habit).
 
-### Caller can't be heard (`Telnyx->Phonic` counter stuck at 0)
+### Caller can't be heard (agent doesn't respond to you)
 
 1. **A `track="..."` attribute on the `<Connect><Stream>`.** This is the big
    one. `track` belongs to the unidirectional `<Start><Stream>` fork; on a
@@ -172,9 +158,9 @@ silent, one-way, or dead audio. If you copied a Twilio bridge, check these:
    so a Twilio-style filter drops every frame. This example forwards all media.
 3. **`input_format` mismatch** — must be `mulaw_8000` to match the PCMU stream.
 
-> Quick diagnosis: if the log shows only `connected`/`start`/`stop` and no
-> media, Telnyx isn't forwarding inbound audio → cause #1. If media arrives but
-> Phonic is silent → cause #2/#3.
+> Quick diagnosis: log the incoming Telnyx events. If you only see
+> `connected`/`start`/`stop` and no `media`, Telnyx isn't forwarding inbound
+> audio → cause #1. If `media` arrives but Phonic stays silent → cause #2/#3.
 
 ### `Error: Socket is not open` on connect
 

@@ -111,20 +111,8 @@ uv run server.py
 - **Inbound:** call your Telnyx number.
 - **Outbound:** `uv run outbound_call.py`.
 
-## Verifying audio flows both ways
-
-The server prints a live counter every 2 seconds:
-
-```
-[audio] Telnyx->Phonic: 143 frames | Phonic->Telnyx: 98 frames
-```
-
-- **`Telnyx->Phonic` climbing while you speak** → inbound audio is reaching
-  Phonic.
-- **`Phonic->Telnyx` climbing while the agent speaks** → we're sending the
-  agent's audio to Telnyx.
-- **`Phonic->Telnyx` climbing but you hear nothing** → frames are leaving the
-  server but Telnyx is dropping them → the bidirectional-mode problem below.
+A working call is two-way: you hear the agent's welcome message, and the agent
+responds to what you say. If only one direction works, see Troubleshooting.
 
 ## Porting from a Twilio integration? Read this first
 
@@ -151,7 +139,7 @@ silent, one-way, or dead audio. If you copied a Twilio bridge, check these:
 3. **Wrong outbound frame shape.** Send exactly
    `{"event":"media","media":{"payload":"<base64 PCMU>"}}` — no `streamSid`.
 
-### Caller can't be heard (`Telnyx->Phonic` counter stuck at 0)
+### Caller can't be heard (agent doesn't respond to you)
 
 1. **A `track="..."` attribute on the `<Connect><Stream>`.** `track` belongs to
    the unidirectional `<Start><Stream>` fork; on a bidirectional
