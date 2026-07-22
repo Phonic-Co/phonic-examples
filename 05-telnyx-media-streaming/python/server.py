@@ -130,6 +130,7 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 await process_task
             except asyncio.CancelledError:
+                # Expected when the connection closes mid-flight; nothing to do.
                 pass
             except Exception as error:
                 print(f"send_to_phonic task failed: {error}")
