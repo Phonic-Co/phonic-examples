@@ -164,6 +164,17 @@ silent, one-way, or dead audio. If you copied a Twilio bridge, check these:
 - **Number not on the right connection.** The number must be assigned to your
   **TeXML application**, not a SIP connection.
 
+## Production notes
+
+This example is intentionally minimal. Before going live you should also:
+
+- **Verify Telnyx webhook signatures.** `/inbound` and `/call-control` are
+  unauthenticated here, so a forged request could trigger `streaming_start`.
+  Validate the `Telnyx-Signature-Ed25519` / `Telnyx-Timestamp` headers before
+  acting on a webhook.
+- **Authenticate the media WebSocket.** `/ws` accepts any client; bind the
+  stream URL to a per-call token and check it before accepting the connection.
+
 ## References
 
 - [Telnyx: Media Streaming over WebSockets](https://developers.telnyx.com/docs/voice/programmable-voice/media-streaming)

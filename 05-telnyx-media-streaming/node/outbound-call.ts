@@ -17,6 +17,7 @@ requireOutboundEnvVars();
 async function makeCall() {
   const response = await fetch("https://api.telnyx.com/v2/calls", {
     method: "POST",
+    signal: AbortSignal.timeout(5000),
     headers: {
       Authorization: `Bearer ${telnyxApiKey}`,
       "Content-Type": "application/json",

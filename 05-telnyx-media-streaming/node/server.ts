@@ -48,6 +48,7 @@ app.post("/call-control", async (c) => {
       `https://api.telnyx.com/v2/calls/${callControlId}/actions/streaming_start`,
       {
         method: "POST",
+        signal: AbortSignal.timeout(5000),
         headers: {
           Authorization: `Bearer ${telnyxApiKey}`,
           "Content-Type": "application/json",

@@ -50,6 +50,7 @@ async def call_control(request: Request) -> Response:
             resp = await http.post(
                 f"https://api.telnyx.com/v2/calls/{call_control_id}/actions/streaming_start",
                 headers={"Authorization": f"Bearer {TELNYX_API_KEY}"},
+                timeout=5.0,
                 json={
                     "stream_url": ws_url(),
                     "stream_bidirectional_mode": "rtp",

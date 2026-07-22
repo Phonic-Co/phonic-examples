@@ -24,8 +24,9 @@ Caller  ⇄  Telnyx  ⇄  this server (/ws)  ⇄  Phonic agent
 
 - **Inbound** calls hit `POST /inbound`, which returns TeXML telling Telnyx to
   open a bidirectional media stream to `/ws`.
-- **Outbound** calls are placed with the Call Control API (`outbound-call.ts`),
-  which starts the same bidirectional stream in the dial request.
+- **Outbound** calls are placed with the Call Control API (`outbound-call.ts`);
+  the server starts the bidirectional stream via `streaming_start` after
+  `call.answered`.
 - `/ws` relays caller audio to Phonic and Phonic's audio back to Telnyx.
 
 The one thing that matters for return audio: **Telnyx only plays audio you send
@@ -180,6 +181,17 @@ calling `sendConfig()` immediately throws. Send the config from the socket's
   fast-busy before any webhook fires.
 - **Number not on the right connection.** The number must be assigned to your
   **TeXML application**, not a SIP connection.
+
+## Production notes
+
+This example is intentionally minimal. Before going live you should also:
+
+- **Verify Telnyx webhook signatures.** `/inbound` and `/call-control` are
+  unauthenticated here, so a forged request could trigger `streaming_start`.
+  Validate the `Telnyx-Signature-Ed25519` / `Telnyx-Timestamp` headers before
+  acting on a webhook.
+- **Authenticate the media WebSocket.** `/ws` accepts any client; bind the
+  stream URL to a per-call token and check it before accepting the connection.
 
 ## References
 
