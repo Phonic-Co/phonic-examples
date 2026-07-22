@@ -124,8 +124,15 @@ async def websocket_endpoint(websocket: WebSocket):
                 elif event == "stop":
                     break
         finally:
+            # Signal send_to_phonic to stop, then wait for it, swallowing
+            # cancellation and surfacing any unexpected error during teardown.
             await queue.put(None)
-            await process_task
+            try:
+                await process_task
+            except asyncio.CancelledError:
+                pass
+            except Exception as error:
+                print(f"send_to_phonic task failed: {error}")
 
     await handle_websocket()
 
