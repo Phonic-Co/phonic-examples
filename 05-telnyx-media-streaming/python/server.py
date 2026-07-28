@@ -5,7 +5,7 @@ import os
 import httpx
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, Response, WebSocket
+from fastapi import FastAPI, Request, Response, WebSocket, WebSocketDisconnect
 from phonic import AsyncPhonic, AudioChunkPayload
 from phonic.conversations.socket_client import ConversationsSocketClientResponse
 from phonic.types.config_payload import ConfigPayload
@@ -77,9 +77,14 @@ async def websocket_endpoint(websocket: WebSocket):
                 # conversation_created on it — that message can arrive first.
                 if stream_id is not None:
                     # Telnyx frame: event + media.payload only, no stream id.
-                    await websocket.send_json(
-                        {"event": "media", "media": {"payload": message.audio}}
-                    )
+                    try:
+                        await websocket.send_json(
+                            {"event": "media", "media": {"payload": message.audio}}
+                        )
+                    except (WebSocketDisconnect, RuntimeError):
+                        # Caller hung up; a Phonic frame can still arrive mid-
+                        # teardown and race the closed Telnyx socket. Ignore it.
+                        pass
             case "conversation_created":
                 conversation_created.set()
             case "error":
