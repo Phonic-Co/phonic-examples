@@ -115,7 +115,8 @@ app.get(
 
           phonicSocket.on("close", (event) => {
             console.log(
-              `Phonic WebSocket closed with code ${event.code} and reason "${event.reason}"`,
+              `Phonic WebSocket closed with code ${event.code}` +
+                (event.reason ? ` and reason "${event.reason}"` : ""),
             );
           });
 

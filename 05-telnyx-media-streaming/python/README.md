@@ -74,19 +74,23 @@ spaces.
 Telnyx starts a media stream from either a TeXML application or a Voice API
 (Call Control) application. Pick whichever your number is already on.
 
-### Option A — TeXML application (drives the inbound flow here)
+### Option A — TeXML application (inbound)
 
-1. In the Telnyx portal, create a **TeXML Application**.
+1. In the Telnyx portal, go to Voice Suite > Programmable Voice > create a **TeXML Application**.
 2. Set its **Voice Method** webhook (inbound) to `{NGROK_URL}/inbound` (GET or
    POST — the endpoint accepts both).
-3. Assign your phone number to this application.
+3. Assign your phone number to this application by going to Voice Suite > 
+Verified Numbers so that your agent can pick up your call.
 
 ### Option B — Voice API / Call Control application (outbound)
 
 For `outbound_call.py` you need a **Voice API application** (its id is
 `TELNYX_CONNECTION_ID`), and `TELNYX_PHONE_NUMBER` must be able to place calls
-on it. You do **not** need to configure the app's webhook in the portal — the
-dial request sets a per-call `webhook_url` pointing at `/call-control`.
+on it.
+
+1. In the Telnyx portal, go to Voice Suite > Programmable Voice > create a **Voice API Application**.
+2. Although it requires a webhook URL, `outbound_call.py` will send a per-call `webhook_url` that overrides whatever is on the app. To match the code, you can enter `{NGROK_URL}/call-control`, or `https://example.com` will work fine as well.
+3. Telnyx blocks outbound calls on a connection that has no Outbound Voice Profile (OVP).  Create OVP in Voice Suite > Outbound Voice, make sure its allowed/whitelisted destinations include the country you're dialing (US/CA by default), and attach it to the application.
 
 The flow: dial (`outbound_call.py`) → Telnyx posts `call.answered` to
 `/call-control` → the server issues `streaming_start` with
@@ -159,8 +163,7 @@ silent, one-way, or dead audio. If you copied a Twilio bridge, check these:
   every restart; the TeXML app's webhook must point at the *current* URL, and
   the ngrok port must match the server `PORT`. Confirm with
   `curl -i https://<ngrok>/inbound` — you should get the `<Response>` XML.
-- **Trial account restrictions.** Telnyx trials only allow calls to/from
-  **verified** numbers, or you get a fast-busy before any webhook fires.
+- **Account is not funded.** You will need to fund your account before the app can receive/place calls. Go to Account > Manage Billing to view your account balance.
 - **Number not on the right connection.** The number must be assigned to your
   **TeXML application**, not a SIP connection.
 
