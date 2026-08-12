@@ -86,29 +86,5 @@ npm run outbound-call
 
 ## 6. Observe the Live Transcript and Audio
 
-### Browser playback with HLS.js
-
-Start the separate, local-only browser player:
-
-```bash
-npm run browser-live-preview
-```
-
-The player mints a short-lived session token on its backend, uses it for the
-live WebSocket, and proxies the authenticated HLS playlist and segments through
-the same origin. It binds only to localhost, so the token endpoint is not
-exposed through the webhook server's ngrok tunnel.
-
-Then open `http://localhost:3000` and enter an active conversation ID.
-
-When building your own player, create the session token on your backend; never
-put a Phonic API key in browser code. Authenticate the WebSocket, every playlist
-refresh, and every segment request. HLS.js does not automatically propagate a
-playlist query string to relative segment URLs, and its default XHR loader does
-not use `fetchSetup`. The included player avoids both pitfalls by rewriting the
-playlist with authenticated, same-origin segment URLs.
-
-A native `<audio src="...">` cannot authenticate each playlist and segment
-request and therefore cannot consume this URL directly. For conversations
-longer than the token TTL, renew the token through your backend before it
-expires.
+For browser playback with live transcript and HLS audio, see the separate
+[live conversation browser example](../../06-conversation-browser/node/README.md).
