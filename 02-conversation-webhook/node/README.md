@@ -84,7 +84,7 @@ This starts a server with three endpoints:
 npm run outbound-call
 ```
 
-## 6. Observe the Live Transcript and Audio
+## 6. Continue with the Browser Example
 
 For browser playback with live transcript and HLS audio, see the separate
 [live conversation browser example](../../06-conversation-browser/node/README.md).

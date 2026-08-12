@@ -12,20 +12,15 @@
   },
   "dependencies": {
     "@hono/node-server": "1.17.1",
-    "@hono/node-ws": "1.2.0",
     "dotenv": "16.5.0",
-    "hls.js": "1.6.18",
     "hono": "4.8.5",
     "phonic": "0.32.9",
     "svix": "1.76.1",
-    "tsx": "4.20.3",
-    "twilio": "5.7.3",
-    "ws": "8.20.0"
+    "tsx": "4.20.3"
   },
   "devDependencies": {
     "@biomejs/biome": "2.2.4",
     "@types/node": "24.5.2",
-    "@types/ws": "8.18.1",
     "typescript": "5.9.2"
   }
 }
