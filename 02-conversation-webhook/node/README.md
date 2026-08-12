@@ -86,8 +86,6 @@ npm run outbound-call
 
 ## 6. Observe the Live Transcript and Audio
 
-The example uses the production Phonic API at `https://api.phonic.ai/v1`.
-
 ### Browser playback with HLS.js
 
 Start the separate, local-only browser player:
