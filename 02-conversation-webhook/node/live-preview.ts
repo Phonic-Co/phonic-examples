@@ -17,6 +17,13 @@ const websocketUrl = new URL(
 websocketUrl.protocol = websocketUrl.protocol === "https:" ? "wss:" : "ws:";
 
 const authorization = `Bearer ${apiKey}`;
+const expectedPlaylistUrl = new URL(
+  `/v1/conversations/${encodeURIComponent(conversationId)}/live/audio.m3u8`,
+  apiUrl,
+);
+const expectedSegmentPath = new RegExp(
+  `^/v1/conversations/${conversationId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}/live/segments/segment-\\d+\\.ts$`,
+);
 const socket = new WebSocket(websocketUrl, {
   headers: { Authorization: authorization },
 });
@@ -42,7 +49,17 @@ const inspectPlaylist = async (playlistUrl: string) => {
     const segmentUrls = playlist
       .split("\n")
       .filter((line) => line.length > 0 && !line.startsWith("#"))
-      .map((line) => new URL(line, playlistUrl).toString());
+      .map((line) => new URL(line, playlistUrl))
+      .map((url) => {
+        if (
+          url.origin !== expectedPlaylistUrl.origin ||
+          !expectedSegmentPath.test(url.pathname)
+        ) {
+          throw new Error(`Unexpected live audio segment URL: ${url}`);
+        }
+
+        return new URL(url.pathname, expectedPlaylistUrl).toString();
+      });
     const latestSegmentUrl = segmentUrls.at(-1);
 
     console.log("Published segments:", segmentUrls.length);
@@ -74,8 +91,12 @@ socket.on("message", async (rawMessage) => {
         throw new Error("conversation-audio message is missing its URL");
       }
 
+      if (message.url !== expectedPlaylistUrl.toString()) {
+        throw new Error("conversation-audio message has an unexpected URL");
+      }
+
       clearInterval(playlistTimer);
-      const playlistUrl = message.url;
+      const playlistUrl = expectedPlaylistUrl.toString();
       console.log("Live playlist:", playlistUrl);
       await inspectPlaylist(playlistUrl);
       playlistTimer = setInterval(() => {
