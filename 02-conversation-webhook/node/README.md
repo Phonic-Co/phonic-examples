@@ -86,7 +86,7 @@ npm run outbound-call
 
 ## 6. Observe the Live Transcript and Audio
 
-The example uses the production Phonic API at `https://api.phonic.ai`.
+The example uses the production Phonic API at `https://api.phonic.ai/v1`.
 
 ### Browser playback with HLS.js
 
@@ -100,12 +100,6 @@ Open `http://localhost:3000`. The player mints a short-lived session token on
 its backend, uses it for the live WebSocket, and proxies the authenticated HLS
 playlist and segments through the same origin. It binds only to localhost, so
 the token endpoint is not exposed through the webhook server's ngrok tunnel.
-
-If the server is remote, forward both ports before opening the player locally:
-
-```bash
-ssh -L 3000:localhost:3000 -L 3591:localhost:3591 user@server
-```
 
 Then open `http://localhost:3000` and enter an active conversation ID.
 
