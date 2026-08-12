@@ -108,9 +108,9 @@ available.
 
 ### Browser playback with HLS.js
 
-Browser playback requires an HLS client that can send the bearer credential on
-both playlist refreshes and segment requests. Do not put a Phonic API key in
-browser code; use a browser-safe access token.
+Browser playback requires an HLS client that can add a short-lived session
+token to the live WebSocket, playlist refreshes, and segment requests. Create
+the session token on your backend; do not put a Phonic API key in browser code.
 
 ```bash
 npm install hls.js
@@ -120,21 +120,34 @@ npm install hls.js
 import Hls from "hls.js";
 
 const audio = document.querySelector("audio");
+let sessionToken = await getSessionTokenFromYourBackend();
+const wsUrl = new URL(liveWebSocketUrl);
+wsUrl.searchParams.set("session_token", sessionToken);
+const liveWebSocket = new WebSocket(wsUrl);
 
 if (!audio || !Hls.isSupported()) {
   throw new Error("HLS.js playback is not supported in this browser");
 }
 
 const hls = new Hls({
-  xhrSetup(xhr) {
-    xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+  fetchSetup(context, initParams) {
+    const authenticatedUrl = new URL(context.url);
+    authenticatedUrl.searchParams.set("session_token", sessionToken);
+    return new Request(authenticatedUrl, initParams);
   },
 });
 
-// Use the URL from the WebSocket's conversation-audio event.
-hls.loadSource(liveAudioUrl);
-hls.attachMedia(audio);
+liveWebSocket.addEventListener("message", (event) => {
+  const message = JSON.parse(event.data);
+
+  if (message.type === "conversation-audio") {
+    hls.loadSource(message.url);
+    hls.attachMedia(audio);
+  }
+});
 ```
 
-A native `<audio src="...">` request cannot attach the required Authorization
-header and therefore cannot consume this URL directly.
+A native `<audio src="...">` request cannot add the required session token to
+each playlist and segment request and therefore cannot consume this URL
+directly. For conversations longer than the token TTL, renew the token through
+your backend before it expires and update the value used by the request hook.
