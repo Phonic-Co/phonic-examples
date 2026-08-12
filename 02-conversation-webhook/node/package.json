@@ -5,7 +5,6 @@
   "scripts": {
     "create-agent": "tsx create-agent.ts",
     "outbound-call": "tsx outbound-call.ts",
-    "live-preview": "tsx live-preview.ts",
     "browser-live-preview": "tsx browser-live-preview.ts",
     "start": "tsx index.ts",
     "dev": "tsx watch index.ts",

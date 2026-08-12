@@ -7,14 +7,11 @@ import { PhonicClient } from "phonic";
 config({ path: ".env.local" });
 
 const apiKey = process.env.PHONIC_API_KEY;
-const configuredApiUrl = process.env.PHONIC_API_URL ?? "https://api.phonic.ai";
-const apiUrl = configuredApiUrl.endsWith("/v1")
-  ? configuredApiUrl
-  : new URL("/v1", configuredApiUrl).toString().replace(/\/$/, "");
+const apiUrl = "https://api.phonic.ai/v1";
 
 if (!apiKey) throw new Error("Missing PHONIC_API_KEY");
 
-const client = new PhonicClient({ apiKey, baseUrl: configuredApiUrl });
+const client = new PhonicClient({ apiKey });
 const app = new Hono();
 
 app.get("/", (c) => c.html(readFileSync("browser-live-preview.html", "utf8")));

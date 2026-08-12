@@ -8,10 +8,7 @@ const configWebhookAuthorization =
   process.env.PHONIC_CONFIG_WEBHOOK_AUTHORIZATION ?? "Bearer authorization_key";
 const NGROK_URL = process.env.NGROK_URL as string;
 
-const client = new PhonicClient({
-  apiKey,
-  baseUrl: process.env.PHONIC_API_URL,
-});
+const client = new PhonicClient({ apiKey });
 
 async function createTool() {
   await client.tools.create({

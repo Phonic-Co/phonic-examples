@@ -3,10 +3,7 @@ import { PhonicClient } from "phonic";
 
 config({ path: ".env.local" });
 
-const client = new PhonicClient({
-  apiKey: process.env.PHONIC_API_KEY,
-  baseUrl: process.env.PHONIC_API_URL,
-});
+const client = new PhonicClient({ apiKey: process.env.PHONIC_API_KEY });
 
 async function outboundCall() {
   const conversation = await client.conversations.outboundCall({

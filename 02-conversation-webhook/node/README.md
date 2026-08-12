@@ -54,7 +54,6 @@ PHONIC_WEBHOOK_SIGNING_SECRET="whsec_..." # Found in the Webhooks tab in the Pho
 PHONIC_CONFIG_WEBHOOK_AUTHORIZATION="Bearer your_auth_key" # Authorization key to secure the /webhooks/phonic-config endpoint
 NGROK_URL="https://your-ngrok-url.ngrok-free.app"
 CUSTOMER_PHONE_NUMBER="+15551234567" # The phone number to call
-PHONIC_API_URL="https://api.phonic.ai/v1" # Optional: use a preview or local API base URL, such as http://localhost:3591/v1
 ```
 Your phone number must include the leading `+` and country code, and must not contain dashes or spaces.
 
@@ -87,24 +86,7 @@ npm run outbound-call
 
 ## 6. Observe the Live Transcript and Audio
 
-While the conversation is in progress, run the live preview with the ID returned
-by the outbound-call request:
-
-```bash
-CONVERSATION_ID="conv_..." npm run live-preview
-```
-
-To exercise a local or preview API deployment, set `PHONIC_API_URL` in
-`.env.local`. It defaults to `https://api.phonic.ai`. The create-agent,
-outbound-call, and live-preview commands all use the same URL.
-
-The script connects to the live conversation WebSocket, prints transcript
-updates, fetches the authenticated HLS playlist advertised by the WebSocket,
-and verifies that its newest authenticated Phonic audio segment can be
-downloaded. The API key is sent with both playlist and segment requests. When
-the WebSocket emits `conversation-saved`, use the regular conversation endpoint
-for the final transcript and recording; the live endpoints are no longer
-available.
+The example uses the production Phonic API at `https://api.phonic.ai`.
 
 ### Browser playback with HLS.js
 
