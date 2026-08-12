@@ -96,18 +96,26 @@ Start the separate, local-only browser player:
 npm run browser-live-preview
 ```
 
-Open `http://localhost:3001`. The player mints a short-lived session token on
+Open `http://localhost:3000`. The player mints a short-lived session token on
 its backend, uses it for the live WebSocket, and proxies the authenticated HLS
 playlist and segments through the same origin. It binds only to localhost, so
 the token endpoint is not exposed through the webhook server's ngrok tunnel.
 
+If the webhook server is already using port 3000, run the browser preview on a
+second port:
+
+```bash
+PORT=3001 npm run browser-live-preview
+```
+
 If the server is remote, forward both ports before opening the player locally:
 
 ```bash
-ssh -L 3001:localhost:3001 -L 3591:localhost:3591 user@server
+ssh -L 3000:localhost:3000 -L 3591:localhost:3591 user@server
 ```
 
-Then open `http://localhost:3001` and enter an active conversation ID.
+Then open `http://localhost:3000` and enter an active conversation ID. If you
+used `PORT=3001`, forward and open port 3001 instead.
 
 When building your own player, create the session token on your backend; never
 put a Phonic API key in browser code. Authenticate the WebSocket, every playlist

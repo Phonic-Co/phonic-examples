@@ -61,5 +61,6 @@ app.get("/api/*", async (c) => {
   return new Response(body, { status: response.status, headers });
 });
 
-serve({ fetch: app.fetch, hostname: "127.0.0.1", port: 3001 });
-console.log("Browser live preview: http://localhost:3001");
+const port = Number(process.env.PORT ?? 3000);
+serve({ fetch: app.fetch, hostname: "127.0.0.1", port });
+console.log(`Browser live preview: http://localhost:${port}`);
