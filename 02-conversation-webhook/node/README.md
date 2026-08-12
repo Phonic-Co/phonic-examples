@@ -8,14 +8,14 @@ This example demonstrates how to create a Phonic agent that uses:
 
 In this example, we will help you both create the agent and a simple Hono API server that will handle the webhook requests.
 
-The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override its default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will recieve a conversation.ended and a conversation.analysis webhook.
+The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override its default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will receive a conversation.ended and a conversation.analysis webhook.
 
 We demonstrate using an Authorization header to secure the `/webhooks/phonic-config` endpoint. This is set using the `PHONIC_CONFIG_WEBHOOK_AUTHORIZATION` environment variable, which you provide as part of your agent definition and will be checked by the Hono API endpoint.
 
 ## 1. Prerequisites
 
 - Node.js installed
-- [Phonic](https://phonic.co) API key for voice processing
+- [Phonic](https://phonic.ai) API key for voice processing
 - [ngrok](https://ngrok.com) for exposing your local server to the internet
 
 ## 2. Setup
@@ -24,7 +24,7 @@ We demonstrate using an Authorization header to secure the `/webhooks/phonic-con
 
 Navigate to the conversation webhook example directory:
 ```bash
-cd phonic-examples/conversation-webhook/node
+cd phonic-examples/02-conversation-webhook/node
 ```
 
 Install dependencies using npm:
@@ -36,7 +36,7 @@ Follow the ngrok setup instructions [here](https://github.com/Phonic-Co/phonic-e
 
 ### 2.2 Enable Webhook Events
 
-Enable webhook events in the Phonic UI. Navigate to the [Webhooks](https://phonic.co/webhooks) page and click on the "Create Webhook" button, subscribing to the following events:
+Enable webhook events in the Phonic UI. Navigate to the [Webhooks](https://phonic.ai/webhooks) page and click on the "Create Webhook" button, subscribing to the following events:
 
 - conversation.analysis
 - conversation.ended
@@ -54,7 +54,7 @@ PHONIC_WEBHOOK_SIGNING_SECRET="whsec_..." # Found in the Webhooks tab in the Pho
 PHONIC_CONFIG_WEBHOOK_AUTHORIZATION="Bearer your_auth_key" # Authorization key to secure the /webhooks/phonic-config endpoint
 NGROK_URL="https://your-ngrok-url.ngrok-free.app"
 CUSTOMER_PHONE_NUMBER="+15551234567" # The phone number to call
-PHONIC_API_URL="https://api.phonic.ai" # Optional: use the URL for a preview deployment
+PHONIC_API_URL="https://api.phonic.ai/v1" # Optional: use a preview or local API base URL, such as http://localhost:3591/v1
 ```
 Your phone number must include the leading `+` and country code, and must not contain dashes or spaces.
 
@@ -108,46 +108,29 @@ available.
 
 ### Browser playback with HLS.js
 
-Browser playback requires an HLS client that can add a short-lived session
-token to the live WebSocket, playlist refreshes, and segment requests. Create
-the session token on your backend; do not put a Phonic API key in browser code.
+The webhook server includes a local-only browser player at
+`http://localhost:3000/live-preview`. It mints a short-lived session token on
+the backend, uses it for the live WebSocket, and proxies the authenticated HLS
+playlist and segments through the same origin. The player routes return 404
+through ngrok so the token endpoint is not publicly exposed.
+
+If the server is remote, forward both ports before opening the player locally:
 
 ```bash
-npm install hls.js
+ssh -L 3000:localhost:3000 -L 3591:localhost:3591 user@server
 ```
 
-```ts
-import Hls from "hls.js";
+Install dependencies and start the webhook server as described above, then
+open `http://localhost:3000/live-preview` and enter an active conversation ID.
 
-const audio = document.querySelector("audio");
-let sessionToken = await getSessionTokenFromYourBackend();
-const wsUrl = new URL(liveWebSocketUrl);
-wsUrl.searchParams.set("session_token", sessionToken);
-const liveWebSocket = new WebSocket(wsUrl);
+When building your own player, create the session token on your backend; never
+put a Phonic API key in browser code. Authenticate the WebSocket, every playlist
+refresh, and every segment request. HLS.js does not automatically propagate a
+playlist query string to relative segment URLs, and its default XHR loader does
+not use `fetchSetup`. The included player avoids both pitfalls by rewriting the
+playlist with authenticated, same-origin segment URLs.
 
-if (!audio || !Hls.isSupported()) {
-  throw new Error("HLS.js playback is not supported in this browser");
-}
-
-const hls = new Hls({
-  fetchSetup(context, initParams) {
-    const authenticatedUrl = new URL(context.url);
-    authenticatedUrl.searchParams.set("session_token", sessionToken);
-    return new Request(authenticatedUrl, initParams);
-  },
-});
-
-liveWebSocket.addEventListener("message", (event) => {
-  const message = JSON.parse(event.data);
-
-  if (message.type === "conversation-audio") {
-    hls.loadSource(message.url);
-    hls.attachMedia(audio);
-  }
-});
-```
-
-A native `<audio src="...">` request cannot add the required session token to
-each playlist and segment request and therefore cannot consume this URL
-directly. For conversations longer than the token TTL, renew the token through
-your backend before it expires and update the value used by the request hook.
+A native `<audio src="...">` cannot authenticate each playlist and segment
+request and therefore cannot consume this URL directly. For conversations
+longer than the token TTL, renew the token through your backend before it
+expires.
