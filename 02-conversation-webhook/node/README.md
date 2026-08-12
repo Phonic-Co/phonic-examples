@@ -96,10 +96,10 @@ Start the separate, local-only browser player:
 npm run browser-live-preview
 ```
 
-Open `http://localhost:3000`. The player mints a short-lived session token on
-its backend, uses it for the live WebSocket, and proxies the authenticated HLS
-playlist and segments through the same origin. It binds only to localhost, so
-the token endpoint is not exposed through the webhook server's ngrok tunnel.
+The player mints a short-lived session token on its backend, uses it for the
+live WebSocket, and proxies the authenticated HLS playlist and segments through
+the same origin. It binds only to localhost, so the token endpoint is not
+exposed through the webhook server's ngrok tunnel.
 
 Then open `http://localhost:3000` and enter an active conversation ID.
 
