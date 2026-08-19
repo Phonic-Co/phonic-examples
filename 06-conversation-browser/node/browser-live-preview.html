@@ -43,8 +43,16 @@
         status.textContent = "Creating a short-lived session...";
         const conversationId = input.value.trim();
         transcript.textContent = "";
-        const response = await fetch("/session-token", { method: "POST" });
-        if (!response.ok) throw new Error(await response.text());
+        const response = await fetch("/session-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversation_id: conversationId }),
+        });
+        if (!response.ok) {
+          const { error } = await response.json().catch(() => ({}));
+          status.textContent = error?.message ?? "Could not start the preview.";
+          return;
+        }
         const { session_token: token, api_url: apiUrl } = await response.json();
         const wsUrl = new URL(`${apiUrl}/conversations/${encodeURIComponent(conversationId)}/live/ws`);
         wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";

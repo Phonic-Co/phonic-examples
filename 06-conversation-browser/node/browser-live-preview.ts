@@ -22,7 +22,27 @@ app.get("/hls.js", (c) => {
 });
 
 app.post("/session-token", async (c) => {
-  const token = await client.auth.createSessionToken({ ttl_seconds: 300 });
+  const body = await c.req
+    .json<{ conversation_id?: string }>()
+    .catch((): { conversation_id?: string } => ({}));
+  const conversationId = body.conversation_id;
+
+  if (typeof conversationId !== "string" || conversationId === "") {
+    // Same error shape the Phonic API itself returns.
+    return c.json({ error: { message: "conversation_id is required" } }, 400);
+  }
+
+  // Your authorization belongs here. Phonic enforces which conversation a token
+  // may read; confirm the conversation belongs to the person asking before
+  // creating the token.
+
+  const token = await client.auth.createSessionToken({
+    ttl_seconds: 300,
+    // Restricts the token to this one conversation. Always set this when the
+    // token will be used from a browser.
+    conversation_ids: [conversationId],
+  });
+
   return c.json({ ...token, api_url: apiUrl });
 });
 
