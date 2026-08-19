@@ -4,7 +4,7 @@
 
 Clone the repository and install packages:
 ```bash
-cd phonic-examples/conversation-websocket/node
+cd phonic-examples/03-conversation-websocket/node
 npm install
 ```
 

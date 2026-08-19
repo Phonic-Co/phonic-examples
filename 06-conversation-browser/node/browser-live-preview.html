@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Phonic live preview</title>
+    <style>
+      body { max-width: 720px; margin: 3rem auto; padding: 0 1rem; font: 16px/1.5 system-ui, sans-serif; }
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.1rem; margin-top: 1.5rem; }
+      form { display: flex; gap: .5rem; }
+      input, button { font: inherit; }
+      input { flex: 1; padding: .65rem; }
+      button { padding: .65rem 1rem; }
+      audio { width: 100%; margin: 1.5rem 0; }
+      #status { color: #555; }
+      #transcript { white-space: pre-wrap; font: inherit; line-height: 1.5; }
+      .turn { margin: 0 0 .75rem; }
+      .turn-label { font-weight: 700; }
+      #transcript:empty::before { color: #777; content: "Waiting for transcript..."; }
+    </style>
+  </head>
+  <body>
+    <h1>Phonic live preview</h1>
+    <form id="connect-form">
+      <input id="conversation-id" placeholder="conv_..." required>
+      <button>Connect</button>
+    </form>
+    <audio id="audio" controls autoplay></audio>
+    <p id="status">Enter an active conversation ID.</p>
+    <h2>Live transcript</h2>
+    <div id="transcript" aria-live="polite"></div>
+    <script src="/hls.js"></script>
+    <script>
+      const form = document.querySelector("#connect-form");
+      const input = document.querySelector("#conversation-id");
+      const audio = document.querySelector("#audio");
+      const status = document.querySelector("#status");
+      const transcript = document.querySelector("#transcript");
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        status.textContent = "Creating a short-lived session...";
+        const conversationId = input.value.trim();
+        transcript.textContent = "";
+        const response = await fetch("/session-token", { method: "POST" });
+        if (!response.ok) throw new Error(await response.text());
+        const { session_token: token, api_url: apiUrl } = await response.json();
+        const wsUrl = new URL(`${apiUrl}/conversations/${encodeURIComponent(conversationId)}/live/ws`);
+        wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
+        wsUrl.searchParams.set("session_token", token);
+        const socket = new WebSocket(wsUrl);
+        let hls;
+
+        socket.addEventListener("open", () => { status.textContent = "Connected; waiting for audio..."; });
+        socket.addEventListener("close", () => { status.textContent = "Conversation closed."; });
+        socket.addEventListener("error", () => { status.textContent = "Live connection failed."; });
+        socket.addEventListener("message", ({ data }) => {
+          const message = JSON.parse(data);
+          if (message.type === "conversation-updated") {
+            const conversation = message.conversation;
+            if (Array.isArray(conversation?.items)) {
+              transcript.replaceChildren(...conversation.items.map((item) => {
+                const turn = document.createElement("p");
+                turn.className = "turn";
+                const label = document.createElement("strong");
+                label.className = "turn-label";
+                label.textContent = `${item.role[0].toUpperCase()}${item.role.slice(1)}: `;
+                turn.append(label, document.createTextNode(item.text));
+                return turn;
+              }));
+            } else if (typeof conversation?.text === "string" && conversation.text.length > 0) {
+              transcript.textContent = conversation.text;
+            }
+          }
+          if (message.type === "conversation-saved") status.textContent = "Conversation saved.";
+          if (message.type === "conversation-audio") {
+            if (!Hls.isSupported()) {
+              status.textContent = "HLS.js is not supported in this browser.";
+              return;
+            }
+            hls?.destroy();
+            hls = new Hls();
+            const playlistUrl = new URL(
+              `/api${new URL(message.url).pathname.replace(/^\/v1/, "")}`,
+              location.origin,
+            );
+            playlistUrl.searchParams.set("session_token", token);
+            hls.loadSource(playlistUrl.toString());
+            hls.attachMedia(audio);
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+              status.textContent = "Live audio ready.";
+              audio.play().catch(() => { status.textContent = "Press play to hear live audio."; });
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

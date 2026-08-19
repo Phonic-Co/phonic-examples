@@ -9,7 +9,6 @@ config({ path: ".env.local" });
 const configWebhookAuthorization =
   process.env.PHONIC_CONFIG_WEBHOOK_AUTHORIZATION ?? "Bearer authorization_key";
 const phonicWebhookSigningSecret = process.env.PHONIC_WEBHOOK_SIGNING_SECRET;
-
 const app = new Hono();
 
 app.post("/webhooks/phonic-config", async (c) => {
@@ -77,7 +76,7 @@ app.post("/webhooks/add-destination", async (c) => {
   });
 });
 
-const port = 3000;
+const port = Number(process.env.PORT ?? 3000);
 serve({
   fetch: app.fetch,
   port,

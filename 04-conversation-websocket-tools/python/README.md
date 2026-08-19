@@ -4,7 +4,7 @@
 
 Clone the repository and install packages:
 ```bash
-cd phonic-examples/conversation-websocket-tools/python
+cd phonic-examples/04-conversation-websocket-tools/python
 uv sync
 ```
 

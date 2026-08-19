@@ -8,14 +8,14 @@ This example demonstrates how to create a Phonic agent that uses:
 
 In this example, we will help you both create the agent and a simple Hono API server that will handle the webhook requests.
 
-The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override its default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will recieve a conversation.ended and a conversation.analysis webhook.
+The agent that you will create will hit the `/webhooks/phonic-config` endpoint to override its default configuration. When you make an outbound call and confirm that you will visit a destination, your server will be called via the `/webhooks/add-destination` endpoint. After the conclusion of the call, your server will receive a conversation.ended and a conversation.analysis webhook.
 
 We demonstrate using an Authorization header to secure the `/webhooks/phonic-config` endpoint. This is set using the `PHONIC_CONFIG_WEBHOOK_AUTHORIZATION` environment variable, which you provide as part of your agent definition and will be checked by the Hono API endpoint.
 
 ## 1. Prerequisites
 
 - Node.js installed
-- [Phonic](https://phonic.co) API key for voice processing
+- [Phonic](https://phonic.ai) API key for voice processing
 - [ngrok](https://ngrok.com) for exposing your local server to the internet
 
 ## 2. Setup
@@ -24,7 +24,7 @@ We demonstrate using an Authorization header to secure the `/webhooks/phonic-con
 
 Navigate to the conversation webhook example directory:
 ```bash
-cd phonic-examples/conversation-webhook/node
+cd phonic-examples/02-conversation-webhook/node
 ```
 
 Install dependencies using npm:
@@ -36,7 +36,7 @@ Follow the ngrok setup instructions [here](https://github.com/Phonic-Co/phonic-e
 
 ### 2.2 Enable Webhook Events
 
-Enable webhook events in the Phonic UI. Navigate to the [Webhooks](https://phonic.co/webhooks) page and click on the "Create Webhook" button, subscribing to the following events:
+Enable webhook events in the Phonic UI. Navigate to the [Webhooks](https://phonic.ai/webhooks) page and click on the "Create Webhook" button, subscribing to the following events:
 
 - conversation.analysis
 - conversation.ended
@@ -83,3 +83,8 @@ This starts a server with three endpoints:
 ```bash
 npm run outbound-call
 ```
+
+## 6. Continue with the Browser Example
+
+For browser playback with live transcript and HLS audio, see the separate
+[live conversation browser example](../../06-conversation-browser/node/README.md).
