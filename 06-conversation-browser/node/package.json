@@ -13,7 +13,7 @@
     "dotenv": "16.5.0",
     "hls.js": "1.6.18",
     "hono": "4.8.5",
-    "phonic": "0.32.9",
+    "phonic": "0.32.17",
     "tsx": "4.20.3"
   },
   "devDependencies": {
