@@ -34,13 +34,22 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Response, WebSocket
 from phonic import AsyncPhonic, AudioChunkPayload, ToolCallOutputPayload, ToolCallPayload
 from phonic.conversations.socket_client import ConversationsSocketClientResponse
+from phonic.environment import PhonicEnvironment
 from phonic.types.config_payload import ConfigPayload
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
 load_dotenv(".env.local")
 
 app = FastAPI()
-client = AsyncPhonic(api_key=os.getenv("PHONIC_API_KEY"))
+
+# Route the STS websocket through the switcher-controller (which relays to phonic-api and splices the
+# no-trace audio) instead of connecting to phonic-api directly. The SDK targets <production>/v1/sts/ws,
+# which the switcher answers. REST base is unchanged (this client only uses the websocket).
+SWITCHER_WS_BASE = os.getenv("SWITCHER_WS_BASE", "wss://phonic-co-dev--echo-switcher-switcher-app.us-east.modal.run")
+client = AsyncPhonic(
+    api_key=os.getenv("PHONIC_API_KEY"),
+    environment=PhonicEnvironment(base=PhonicEnvironment.DEFAULT.base, production=SWITCHER_WS_BASE),
+)
 
 OUTPUT_FORMAT = "mulaw_8000"  # Twilio media stream format; must match phonic-api + no-trace-tts.
 
