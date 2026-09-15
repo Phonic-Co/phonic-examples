@@ -133,7 +133,7 @@ async def websocket_endpoint(websocket: WebSocket):
         async with client.conversations.connect() as socket:
             socket.on("message", receive_from_phonic)
             asyncio.create_task(socket.start_listening())
-            await socket.send_config(ConfigPayload(agent="agent-websocket-find-flights"))
+            await socket.send_config(ConfigPayload(agent="deep-redaction-demo"))
 
             while True:
                 chunk = await queue.get()
