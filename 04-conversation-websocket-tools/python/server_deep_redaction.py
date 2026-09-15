@@ -52,6 +52,7 @@ client = AsyncPhonic(
 )
 
 OUTPUT_FORMAT = "mulaw_8000"  # Twilio media stream format; must match phonic-api + no-trace-tts.
+AGENT_VOICE = "sabrina"  # must match the agent's voice so the spliced real audio matches the dummy.
 
 
 def account_balance(account_id: str) -> dict:
@@ -114,6 +115,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 "seq_id": message.tool_call_id,
                 "text": real_sentence,
                 "output_format": OUTPUT_FORMAT,
+                "voice_id": AGENT_VOICE,
             }
         )
 
@@ -133,7 +135,13 @@ async def websocket_endpoint(websocket: WebSocket):
         async with client.conversations.connect() as socket:
             socket.on("message", receive_from_phonic)
             asyncio.create_task(socket.start_listening())
-            await socket.send_config(ConfigPayload(agent="deep-redaction-demo"))
+            await socket.send_config(
+                ConfigPayload(
+                    agent="deep-redaction-demo",
+                    input_format=OUTPUT_FORMAT,
+                    output_format=OUTPUT_FORMAT,
+                )
+            )
 
             while True:
                 chunk = await queue.get()
