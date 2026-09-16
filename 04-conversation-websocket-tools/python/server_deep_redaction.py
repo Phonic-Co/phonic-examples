@@ -149,6 +149,16 @@ async def websocket_endpoint(websocket: WebSocket):
         elif message.type == "conversation_created":
             conversation_id = message.conversation_id
             conversation_created.set()
+        elif message.type == "user_started_speaking":
+            # Barge-in. The switcher front-loads a spliced real turn into Twilio's buffer, so stopping
+            # upstream audio does not stop playback; tell Twilio to drop its buffered audio so the
+            # caller can cut in on the real turn too. This is the barge-in signal the SDK surfaces; it
+            # also fires on backchannels, but the agent recovers from those.
+            if stream_sid is not None:
+                try:
+                    await websocket.send_json({"event": "clear", "streamSid": stream_sid})
+                except Exception:
+                    pass
         elif message.type == "tool_call":
             asyncio.create_task(handle_tool_call(message))
         elif message.type == "assistant_ended_conversation":
