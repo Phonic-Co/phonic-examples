@@ -140,9 +140,12 @@ async def websocket_endpoint(websocket: WebSocket):
     async def receive_from_phonic(message: ConversationsSocketClientResponse):
         nonlocal conversation_id
         if stream_sid is not None and message.type == "audio_chunk":
-            await websocket.send_json(
-                {"event": "media", "streamSid": stream_sid, "media": {"payload": message.audio}}
-            )
+            try:
+                await websocket.send_json(
+                    {"event": "media", "streamSid": stream_sid, "media": {"payload": message.audio}}
+                )
+            except Exception:
+                pass  # Twilio stream already closed (e.g. right after a hangup)
         elif message.type == "conversation_created":
             conversation_id = message.conversation_id
             conversation_created.set()
