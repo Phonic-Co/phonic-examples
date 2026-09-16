@@ -136,6 +136,14 @@ async def websocket_endpoint(websocket: WebSocket):
             conversation_created.set()
         elif message.type == "tool_call":
             asyncio.create_task(handle_tool_call(message))
+        elif message.type == "assistant_ended_conversation":
+            # The agent ended the call (natural_conversation_ending): stop streaming and close the
+            # Twilio media stream so the call hangs up instead of sitting in dead air.
+            await queue.put(None)
+            try:
+                await websocket.close()
+            except Exception:
+                pass
 
     async def send_to_phonic():
         async with client.conversations.connect() as socket:
