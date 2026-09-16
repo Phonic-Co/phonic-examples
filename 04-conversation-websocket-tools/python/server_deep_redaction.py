@@ -70,12 +70,24 @@ def fill_post_tool_text(template: str, values: dict) -> str:
     return re.sub(r"\{(\w+)\}", lambda m: str(values.get(m.group(1), m.group(0))), template)
 
 
+_MONTHS = {
+    "January", "February", "March", "April", "May", "June", "July", "August",
+    "September", "October", "November", "December", "Jan", "Feb", "Mar", "Apr",
+    "Jun", "Jul", "Aug", "Sep", "Sept", "Oct", "Nov", "Dec",
+}
+
+
+def _scramble(value: str) -> str:
+    # Keep "Month D" dates valid (pick a plausible day) instead of scrambling into "May 95".
+    m = re.fullmatch(r"([A-Za-z]+)\s+\d{1,2}", value)
+    if m and m.group(1) in _MONTHS:
+        return f"{m.group(1)} {random.randint(1, 28)}"
+    return re.sub(r"\d", lambda _: str(random.randint(0, 9)), value)
+
+
 def mint_dummy(real: dict) -> dict:
-    """A same-shape dummy: keep each field's format, randomize the digits (same magnitude)."""
-    return {
-        k: (re.sub(r"\d", lambda _: str(random.randint(0, 9)), v) if isinstance(v, str) else v)
-        for k, v in real.items()
-    }
+    """A same-shape dummy: keep each field's format, randomize the digits (dates stay valid)."""
+    return {k: (_scramble(v) if isinstance(v, str) else v) for k, v in real.items()}
 
 
 @app.post("/inbound")
