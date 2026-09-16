@@ -55,9 +55,15 @@ OUTPUT_FORMAT = "mulaw_8000"  # Twilio media stream format; must match phonic-ap
 AGENT_VOICE = "sabrina"  # must match the agent's voice so the spliced real audio matches the dummy.
 
 
-def account_balance(account_id: str) -> dict:
-    """Stand-in sensitive tool. In a real integration this hits the customer's backend."""
-    return {"balance": "$5,899.26", "as_of": "June 3"}
+# Stand-in "sensitive" backends, one per tool. In a real integration each hits the customer's system.
+# The field names must match the {placeholders} the LLM authors in post_tool_text (guided by each
+# tool's description).
+TOOL_MOCKS: dict[str, dict] = {
+    "account_balance": {"balance": "$5,899.26", "as_of": "June 3"},
+    "crypto_holdings": {"holdings": "0.5 BTC and 3.2 ETH"},
+    "recent_payout": {"amount": "$1,250.00", "date": "May 28"},
+    "linked_bank": {"bank": "Chase", "last4": "4821"},
+}
 
 
 def fill_post_tool_text(template: str, values: dict) -> str:
@@ -92,7 +98,7 @@ async def websocket_endpoint(websocket: WebSocket):
     async def handle_tool_call(message: ToolCallPayload):
         args = dict(message.parameters)
         post_tool_text = args.pop("post_tool_text", None)
-        real = await asyncio.to_thread(account_balance, account_id=args.get("account_id", ""))
+        real = TOOL_MOCKS.get(message.tool_name, {})
 
         if post_tool_text is None:
             # Not a redacted tool: behave normally.
@@ -137,7 +143,7 @@ async def websocket_endpoint(websocket: WebSocket):
             asyncio.create_task(socket.start_listening())
             await socket.send_config(
                 ConfigPayload(
-                    agent="deep-redaction-demo",
+                    agent="coinbase-deep-redaction-demo",
                     input_format=OUTPUT_FORMAT,
                     output_format=OUTPUT_FORMAT,
                 )
