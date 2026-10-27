@@ -26,7 +26,7 @@ def main():
         parser.error("--item-id is required for replay")
     if args.mode == "responses" and args.item_id:
         parser.error("--item-id applies only to replay")
-    payload = json.loads(args.request.read_text())
+    payload = json.loads(args.request.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         parser.error("request body must be a JSON object")
     path = "/responses" if args.mode == "responses" else f"/conversation_items/{quote(args.item_id, safe='')}/replay"
