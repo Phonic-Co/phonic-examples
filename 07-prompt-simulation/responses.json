@@ -1,0 +1,5 @@
+{
+  "system_prompt": "You are a receptionist. Ask one concise question at a time. Do not claim a booking is confirmed without a booking tool result.",
+  "input": [{ "role": "user", "text": "Can I book an appointment tomorrow afternoon?" }],
+  "num_responses": 3
+}
