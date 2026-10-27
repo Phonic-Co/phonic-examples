@@ -168,7 +168,7 @@ wheels = [
 
 [[package]]
 name = "phonic"
-version = "0.32.9"
+version = "0.32.42"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -177,9 +177,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/0d/ed/0ae96d0d928e216331fa123508779638369fd5a0b969dda56fc064c52ec4/phonic-0.32.9.tar.gz", hash = "sha256:2abb9dd292be59e537da581f395db972dc76c5bea108fc0671be16480ac51e8e", size = 171231, upload-time = "2026-07-10T20:47:36.105Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/99/3e/dd22158758a82d3f30c3c575b727a5e88ff089e7008099d36f6c9eedb90a/phonic-0.32.42.tar.gz", hash = "sha256:fb15685cf84a4b42b5293e1bce2a2788ed075c902ed355e7efe88bcf4970cd41", size = 223323, upload-time = "2026-10-23T03:35:28.043Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6f/74/1f92c34f48bef0d758c1a5c5a61f97dc7f35f66a5848c296ee2f182c1501/phonic-0.32.9-py3-none-any.whl", hash = "sha256:5adf04f539ca5c3a6fe47817ff3efabba2777335a162b178861c44f688584b5d", size = 370854, upload-time = "2026-07-10T20:47:34.786Z" },
+    { url = "https://files.pythonhosted.org/packages/ae/e0/2ea52118514e44f14079a5e892062adafad1f57d692b4994f7ad87918cc4/phonic-0.32.42-py3-none-any.whl", hash = "sha256:9c762f3a364723afa39f23526da9c6647c1cf094bfc173216f750a55e240b1c9", size = 476401, upload-time = "2026-10-23T03:35:26.623Z" },
 ]
 
 [[package]]
@@ -308,7 +308,7 @@ dev = [
 requires-dist = [
     { name = "black", marker = "extra == 'dev'", specifier = "==25.9.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = "==6.0.1" },
-    { name = "phonic", specifier = "==0.32.9" },
+    { name = "phonic", specifier = "==0.32.42" },
     { name = "python-dotenv", specifier = "==1.1.1" },
 ]
 provides-extras = ["dev"]

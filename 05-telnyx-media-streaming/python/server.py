@@ -13,7 +13,11 @@ from phonic.types.config_payload import ConfigPayload
 load_dotenv(".env.local")
 
 app = FastAPI()
-client = AsyncPhonic(api_key=os.getenv("PHONIC_API_KEY"))
+client = AsyncPhonic(
+    api_key=os.getenv("PHONIC_API_KEY"),
+    # Resume the same conversation if the connection to Phonic drops mid-call.
+    reconnect_conversation_on_abnormal_disconnect=True,
+)
 TELNYX_API_KEY = os.getenv("TELNYX_API_KEY")
 
 

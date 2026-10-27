@@ -11,6 +11,8 @@ import type { TwilioWebSocketMessage } from "./types";
 const app = new Hono();
 const phonicClient = new PhonicClient({
   apiKey: phonicApiKey,
+  // Resume the same conversation if the connection to Phonic drops mid-call.
+  reconnectConversationOnAbnormalDisconnect: true,
 });
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
@@ -89,7 +91,9 @@ app.get(
             console.error(`Error from Phonic WebSocket: ${error.message}`);
           });
 
-          await phonicSocket.sendConfig({
+          // connect() resolves before the socket is open, and sending earlier throws.
+          await phonicSocket.waitForOpen();
+          phonicSocket.sendConfig({
             type: "config",
             agent: "agent-websocket-temperature",
             input_format: "mulaw_8000",
