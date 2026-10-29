@@ -9,7 +9,7 @@ dependencies = [
     "fastapi==0.117.1",
     "httpx==0.28.1",
     "isort==6.0.1",
-    "phonic==0.32.9",
+    "phonic==0.32.42",
     "python-dotenv==1.1.1",
     "uvicorn==0.32.0",
 ]

@@ -14,7 +14,11 @@ from twilio.twiml.voice_response import Connect, VoiceResponse
 load_dotenv(".env.local")
 
 app = FastAPI()
-client = AsyncPhonic(api_key=os.getenv("PHONIC_API_KEY"))
+client = AsyncPhonic(
+    api_key=os.getenv("PHONIC_API_KEY"),
+    # Resume the same conversation if the connection to Phonic drops mid-call.
+    reconnect_conversation_on_abnormal_disconnect=True,
+)
 
 
 @app.post("/inbound")

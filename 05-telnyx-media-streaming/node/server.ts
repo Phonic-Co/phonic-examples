@@ -9,6 +9,8 @@ import type { TelnyxWebSocketMessage } from "./types";
 const app = new Hono();
 const phonicClient = new PhonicClient({
   apiKey: phonicApiKey,
+  // Resume the same conversation if the connection to Phonic drops mid-call.
+  reconnectConversationOnAbnormalDisconnect: true,
 });
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
@@ -124,23 +126,17 @@ app.get(
             console.error(`Error from Phonic WebSocket: ${error.message}`);
           });
 
-          // connect() resolves before the socket is open, so send the config on
-          // the open event (or right away if it is already open).
-          const sendInitialConfig = () => {
-            phonicSocket?.sendConfig({
-              type: "config",
-              agent: "agent-telnyx",
-              input_format: "mulaw_8000",
-              output_format: "mulaw_8000",
-            } as Phonic.ConfigPayload);
-          };
-
-          const WS_OPEN = 1;
-          if (phonicSocket.readyState === WS_OPEN) {
-            sendInitialConfig();
-          } else {
-            phonicSocket.on("open", sendInitialConfig);
-          }
+          // connect() resolves before the socket is open, and sending earlier throws.
+          // Wait once rather than sending from an "open" handler: with reconnects
+          // enabled, "open" fires again on every reconnect, and the resumed
+          // conversation rejects a second config.
+          await phonicSocket.waitForOpen();
+          phonicSocket.sendConfig({
+            type: "config",
+            agent: "agent-telnyx",
+            input_format: "mulaw_8000",
+            output_format: "mulaw_8000",
+          } as Phonic.ConfigPayload);
         } catch (error) {
           console.error("Failed to connect to Phonic:", error);
           ws.close();
