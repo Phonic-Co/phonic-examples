@@ -46,10 +46,9 @@ app.get(
           phonicSocket = await phonicClient.conversations.connect();
 
           phonicSocket.on("message", async (message) => {
-            if (!streamSid) return;
-
             switch (message.type) {
               case "audio_chunk":
+                if (!streamSid) return;
                 sendToTwilio(ws, {
                   event: "media",
                   streamSid: streamSid,
@@ -60,10 +59,12 @@ app.get(
                 break;
 
               case "conversation_created":
+                // Phonic can become ready before Twilio supplies the stream ID.
                 conversationCreated = true;
                 break;
 
               case "tool_call": {
+                if (!streamSid) return;
                 const result = await handleToolCall(message);
                 if (result && phonicSocket) {
                   await phonicSocket.sendToolCallOutput({
