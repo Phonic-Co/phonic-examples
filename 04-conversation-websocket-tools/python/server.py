@@ -56,19 +56,21 @@ async def websocket_endpoint(websocket: WebSocket):
         )
 
     async def receive_from_phonic(message: ConversationsSocketClientResponse):
-        # Handler that sends Phonic response to Twilio
-        if stream_sid is not None:
-            match message.type:
-                case "audio_chunk":
-                    sending = {
-                        "event": "media",
-                        "streamSid": stream_sid,
-                        "media": {"payload": message.audio},
-                    }
-                    await websocket.send_json(sending)
-                case "conversation_created":
-                    conversation_created.set()
-                case "tool_call":
+        match message.type:
+            case "audio_chunk":
+                if stream_sid is None:
+                    return
+                sending = {
+                    "event": "media",
+                    "streamSid": stream_sid,
+                    "media": {"payload": message.audio},
+                }
+                await websocket.send_json(sending)
+            case "conversation_created":
+                # Phonic can become ready before Twilio supplies the stream ID.
+                conversation_created.set()
+            case "tool_call":
+                if stream_sid is not None:
                     asyncio.create_task(handle_tool_call(message))
 
     async def send_to_phonic():
