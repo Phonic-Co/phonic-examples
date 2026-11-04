@@ -1,13 +1,13 @@
 import argparse
 import asyncio
 import os
+from contextlib import suppress
 
 import uvicorn
 from dotenv import load_dotenv
-from fastapi import FastAPI, Response, WebSocket
+from fastapi import FastAPI, Response, WebSocket, WebSocketDisconnect
 from phonic import AsyncPhonic, AudioChunkPayload
-from phonic.conversations.socket_client import \
-    ConversationsSocketClientResponse
+from phonic.conversations.socket_client import ConversationsSocketClientResponse
 from phonic.types.config_payload import ConfigPayload
 from twilio.twiml.voice_response import Connect, VoiceResponse
 
@@ -36,6 +36,7 @@ async def websocket_endpoint(websocket: WebSocket):
     queue: asyncio.Queue = asyncio.Queue()
     stream_sid = None
     conversation_created = asyncio.Event()
+    stream_started = asyncio.Event()
 
     async def receive_from_phonic(message: ConversationsSocketClientResponse):
         # Handler that sends Phonic response to Twilio
@@ -55,48 +56,67 @@ async def websocket_endpoint(websocket: WebSocket):
         async with client.conversations.connect() as socket:
             # Register the on-message handler
             socket.on("message", receive_from_phonic)
-            asyncio.create_task(socket.start_listening())
+            listener_task = asyncio.create_task(socket.start_listening())
 
-            # Send the initial config to Phonic
-            await socket.send_config(
-                ConfigPayload(
-                    agent="agent-websocket",
+            try:
+                # Connect early, but wait until Twilio can receive the greeting.
+                await stream_started.wait()
+                # Send the initial config to Phonic
+                await socket.send_config(
+                    ConfigPayload(
+                        agent="agent-websocket",
+                    )
                 )
-            )
 
-            while True:
-                # Continually get audio from Twilio and send to Phonic
-                chunk = await queue.get()
-                if chunk is None:
-                    break
-                if not isinstance(chunk, AudioChunkPayload):
-                    raise ValueError(f"Unexpected chunk type: {type(chunk)}.")
-                await socket.send_audio_chunk(chunk)
+                while True:
+                    # Continually get audio from Twilio and send to Phonic
+                    chunk = await queue.get()
+                    if chunk is None:
+                        break
+                    if not isinstance(chunk, AudioChunkPayload):
+                        raise ValueError(f"Unexpected chunk type: {type(chunk)}.")
+                    await socket.send_audio_chunk(chunk)
+            finally:
+                listener_task.cancel()
+                with suppress(asyncio.CancelledError, WebSocketDisconnect):
+                    await listener_task
 
     async def handle_websocket():
-        # Start the task that sends audio to Phonic
         process_task = asyncio.create_task(send_to_phonic())
 
         try:
             while True:
                 data = await websocket.receive_json()
 
-                # The first message from Twilio contains the streamSid, which is necessary
-                # for all subsequent messages to Twilio.
+                # Release configuration after saving the stream ID.
                 if data["event"] == "start":
                     nonlocal stream_sid
+                    if stream_started.is_set():
+                        continue
                     stream_sid = data["streamSid"]
+                    stream_started.set()
 
                 if data["event"] == "media":
                     if conversation_created.is_set():
                         payload = data["media"]["payload"]
                         await queue.put(AudioChunkPayload(audio=payload))
-                if data["event"] == "closed":
+                if data["event"] in ("stop", "closed"):
                     break
 
+        except WebSocketDisconnect:
+            # A carrier hangup is expected; finally closes the Phonic connection.
+            pass
         finally:
-            await queue.put(None)
-            await process_task
+            try:
+                if conversation_created.is_set():
+                    # Preserve queued caller audio, but bound shutdown if Phonic stalls.
+                    await queue.put(None)
+                    with suppress(asyncio.TimeoutError):
+                        await asyncio.wait_for(asyncio.shield(process_task), timeout=1)
+            finally:
+                process_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await process_task
 
     await handle_websocket()
 
