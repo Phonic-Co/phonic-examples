@@ -36,6 +36,7 @@ async def websocket_endpoint(websocket: WebSocket):
     queue: asyncio.Queue = asyncio.Queue()
     stream_sid = None
     conversation_created = asyncio.Event()
+    stream_started = asyncio.Event()
 
     async def receive_from_phonic(message: ConversationsSocketClientResponse):
         # Handler that sends Phonic response to Twilio
@@ -58,6 +59,8 @@ async def websocket_endpoint(websocket: WebSocket):
             listener_task = asyncio.create_task(socket.start_listening())
 
             try:
+                # Connect early, but wait until Twilio can receive the greeting.
+                await stream_started.wait()
                 # Send the initial config to Phonic
                 await socket.send_config(
                     ConfigPayload(
@@ -77,19 +80,19 @@ async def websocket_endpoint(websocket: WebSocket):
                     await listener_task
 
     async def handle_websocket():
-        process_task = None
+        process_task = asyncio.create_task(send_to_phonic())
 
         try:
             while True:
                 data = await websocket.receive_json()
 
-                # Start Phonic only once Twilio can receive the greeting.
+                # Release configuration after saving the stream ID.
                 if data["event"] == "start":
                     nonlocal stream_sid
-                    if process_task is not None:
+                    if stream_started.is_set():
                         continue
                     stream_sid = data["streamSid"]
-                    process_task = asyncio.create_task(send_to_phonic())
+                    stream_started.set()
 
                 if data["event"] == "media":
                     if conversation_created.is_set():
@@ -102,10 +105,9 @@ async def websocket_endpoint(websocket: WebSocket):
             # A carrier hangup is expected; finally closes the Phonic connection.
             pass
         finally:
-            if process_task is not None:
-                process_task.cancel()
-                with suppress(asyncio.CancelledError):
-                    await process_task
+            process_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await process_task
 
     await handle_websocket()
 

@@ -36,9 +36,31 @@ app.get(
     let streamSid: string | null = null;
     let conversationCreated = false;
     let closed = false;
+    let phonicOpen = false;
+    let configSent = false;
 
     const sendToTwilio = (ws: WSContext, data: unknown) => {
       ws.send(JSON.stringify(data));
+    };
+
+    const configureIfReady = (ws: WSContext) => {
+      if (closed || configSent || !phonicOpen || !streamSid || !phonicSocket)
+        return;
+      // Whichever connection becomes ready last sends the initial config once.
+      configSent = true;
+      try {
+        phonicSocket.sendConfig({
+          type: "config",
+          agent: "agent-websocket-temperature",
+          input_format: "mulaw_8000",
+          output_format: "mulaw_8000",
+        } as Phonic.ConfigPayload);
+      } catch (error) {
+        console.error("Failed to configure Phonic:", error);
+        closed = true;
+        phonicSocket.close();
+        ws.close();
+      }
     };
 
     const startPhonic = async (ws: WSContext) => {
@@ -98,12 +120,8 @@ app.get(
         // connect() resolves before the socket is open, and sending earlier throws.
         await phonicSocket.waitForOpen();
         if (closed) return;
-        phonicSocket.sendConfig({
-          type: "config",
-          agent: "agent-websocket-temperature",
-          input_format: "mulaw_8000",
-          output_format: "mulaw_8000",
-        } as Phonic.ConfigPayload);
+        phonicOpen = true;
+        configureIfReady(ws);
       } catch (error) {
         console.error("Failed to connect to Phonic:", error);
         closed = true;
@@ -113,6 +131,10 @@ app.get(
     };
 
     return {
+      async onOpen(_, ws) {
+        await startPhonic(ws);
+      },
+
       async onMessage(event, ws) {
         const message = event.data;
         if (closed || typeof message !== "string") return;
@@ -122,10 +144,10 @@ app.get(
 
           switch (data.event) {
             case "start":
-              // Start Phonic only once Twilio can receive the greeting.
+              // Configure Phonic only once Twilio can receive the greeting.
               if (streamSid) return;
               streamSid = data.streamSid;
-              await startPhonic(ws);
+              configureIfReady(ws);
               break;
 
             case "media":

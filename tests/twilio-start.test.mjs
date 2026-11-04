@@ -116,8 +116,10 @@ async function bridge(
 			carrierCloses++;
 		},
 	};
-	await handler.onOpen?.({}, ws);
+	const opened = handler.onOpen?.({}, ws);
+	if (!connectGate && !openGate) await opened;
 	return {
+		opened,
 		audio,
 		configs,
 		output,
@@ -170,7 +172,7 @@ for (const path of [
 	test(`${path}: waits for carrier start and delivers the first greeting chunk`, async () => {
 		const b = await bridge(path);
 		await b.media();
-		assert.equal(b.connects, 0);
+		assert.equal(b.connects, 1);
 		assert.equal(b.configs.length, 0);
 		assert.equal(b.audio.length, 0);
 		await b.start();
@@ -198,13 +200,30 @@ for (const path of [
 	test(`${path}: duplicate start during connect cannot create another conversation`, async () => {
 		const gate = deferred();
 		const b = await bridge(path, { connectGate: gate.promise });
-		const start = b.start();
+		await b.start();
 		await b.start();
 		await b.media();
 		assert.equal(b.connects, 1);
 		assert.equal(b.audio.length, 0);
 		gate.resolve();
-		await start;
+		await b.opened;
+		assert.equal(b.configs.length, 1);
+		b.close();
+	});
+
+	test(`${path}: Twilio first waits for socket open, then configures exactly once`, async () => {
+		const gate = deferred();
+		const b = await bridge(path, { openGate: gate.promise });
+		await b.start();
+		await b.start();
+		assert.equal(b.configs.length, 0);
+		assert.deepEqual(b.carrier, []);
+		gate.resolve();
+		await b.opened;
+		assert.equal(b.configs.length, 1);
+		assert.equal(b.carrier[0].media.payload, "first-greeting-chunk");
+		await b.start();
+		await b.reopen();
 		assert.equal(b.configs.length, 1);
 		b.close();
 	});
@@ -214,11 +233,11 @@ for (const path of [
 			test(`${path}: ${end} during ${stage} prevents config and closes socket`, async () => {
 				const gate = deferred();
 				const b = await bridge(path, { [stage + "Gate"]: gate.promise });
-				const start = b.start();
+				await b.start();
 				await Promise.resolve();
 				await b[end]();
 				gate.resolve();
-				await start;
+				await b.opened;
 				assert.equal(b.configs.length, 0);
 				assert.ok(b.lifecycle.includes("close"));
 				await b.start();
@@ -227,11 +246,24 @@ for (const path of [
 		}
 	}
 
-	test(`${path}: close before start never opens Phonic`, async () => {
+	test(`${path}: close before start closes the early socket without config`, async () => {
 		const b = await bridge(path);
 		b.close();
 		await b.start();
-		assert.equal(b.connects, 0);
+		assert.equal(b.connects, 1);
+		assert.equal(b.configs.length, 0);
+		assert.ok(b.lifecycle.includes("close"));
+	});
+
+	test(`${path}: config failure when Twilio arrives first closes the carrier`, async () => {
+		const gate = deferred();
+		const b = await bridge(path, { openGate: gate.promise, failConfig: true });
+		await b.start();
+		gate.resolve();
+		await b.opened;
+		assert.equal(b.carrierCloses, 1);
+		assert.equal(b.configs.length, 0);
+		assert.ok(b.lifecycle.includes("close"));
 	});
 
 	for (const failure of ["failConnect", "failConfig"]) {

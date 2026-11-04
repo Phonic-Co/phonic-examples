@@ -186,7 +186,7 @@ class StartTests(unittest.IsolatedAsyncioTestCase):
 async def normal(socket, carrier, task, tools):
     await carrier.deliver("connected")
     await carrier.deliver("media", media={"payload": "too-early"})
-    assert socket.connects == 0
+    assert socket.connects == 1
     assert socket.configs == []
     await carrier.deliver("start", streamSid="MZ-test")
     await asyncio.wait_for(socket.ready.wait(), 1)
@@ -207,17 +207,36 @@ async def normal(socket, carrier, task, tools):
     assert socket.connects == 1
 
 
+async def carrier_first(socket, carrier, task, tools):
+    socket.connect_gate.clear()
+    await carrier.deliver("start", streamSid="MZ-test")
+    await socket.entered.wait()
+    await carrier.deliver("start", streamSid="duplicate")
+    assert socket.configs == []
+    assert carrier.sent == []
+    socket.connect_gate.set()
+    await asyncio.wait_for(socket.ready.wait(), 1)
+    assert len(socket.configs) == 1
+    assert carrier.sent[0]["streamSid"] == "MZ-test"
+    assert carrier.sent[0]["media"]["payload"] == "first-greeting-chunk"
+
+
 async def close_before_start(socket, carrier, task, tools):
     await carrier.deliver("connected")
     await carrier.incoming.put((WebSocketDisconnect(), None))
     await asyncio.wait_for(task, 1)
-    assert socket.connects == 0
+    assert socket.connects == 1
+    assert socket.configs == []
+    assert socket.finished.is_set()
 
 
 async def stop_before_start(socket, carrier, task, tools):
+    await socket.entered.wait()
     await carrier.incoming.put(({"event": "stop"}, None))
     await asyncio.wait_for(task, 1)
-    assert socket.connects == 0
+    assert socket.connects == 1
+    assert socket.configs == []
+    assert socket.finished.is_set()
 
 
 def during_startup(stage, disconnect):
@@ -273,6 +292,7 @@ for example in ("03-conversation-websocket", "04-conversation-websocket-tools"):
     path = f"{example}/python/server.py"
     for scenario in (
         normal,
+        carrier_first,
         close_before_start,
         stop_before_start,
         listener_disconnect_during_shutdown,
