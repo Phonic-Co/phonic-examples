@@ -243,6 +243,22 @@ def during_startup(stage, disconnect):
     return scenario
 
 
+async def listener_disconnect_during_shutdown(socket, carrier, task, tools):
+    async def disconnected_listener():
+        await socket.ready.wait()
+        try:
+            raise WebSocketDisconnect()
+        finally:
+            socket.listening_done.set()
+
+    with patch.object(socket, "start_listening", disconnected_listener):
+        await carrier.deliver("start", streamSid="MZ-test")
+        await asyncio.wait_for(socket.listening_done.wait(), 1)
+        await carrier.incoming.put(({"event": "stop"}, None))
+        await asyncio.wait_for(task, 1)
+    assert socket.finished.is_set()
+
+
 def test_scenario(path, scenario):
     async def run(self):
         socket = await self.exercise(path, scenario)
@@ -255,7 +271,12 @@ def test_scenario(path, scenario):
 
 for example in ("03-conversation-websocket", "04-conversation-websocket-tools"):
     path = f"{example}/python/server.py"
-    for scenario in (normal, close_before_start, stop_before_start):
+    for scenario in (
+        normal,
+        close_before_start,
+        stop_before_start,
+        listener_disconnect_during_shutdown,
+    ):
         setattr(
             StartTests,
             f"test_{example[:2]}_{scenario.__name__}",

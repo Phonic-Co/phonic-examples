@@ -97,7 +97,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         await socket.send_tool_call_output(chunk)
             finally:
                 listener_task.cancel()
-                with suppress(asyncio.CancelledError):
+                with suppress(asyncio.CancelledError, WebSocketDisconnect):
                     await listener_task
 
     async def handle_websocket():
@@ -123,6 +123,7 @@ async def websocket_endpoint(websocket: WebSocket):
                     break
 
         except WebSocketDisconnect:
+            # A carrier hangup is expected; finally closes the Phonic connection.
             pass
         finally:
             if process_task is not None:
