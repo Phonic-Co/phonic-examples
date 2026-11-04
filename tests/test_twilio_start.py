@@ -278,6 +278,49 @@ async def listener_disconnect_during_shutdown(socket, carrier, task, tools):
     assert socket.finished.is_set()
 
 
+def queued_audio_shutdown(ending, stalled=False):
+    async def scenario(socket, carrier, task, tools):
+        sending = asyncio.Event()
+        release = asyncio.Event()
+        cancelled = asyncio.Event()
+
+        async def slow_send(chunk):
+            sending.set()
+            try:
+                await release.wait()
+                socket.audio.append(chunk)
+            except asyncio.CancelledError:
+                cancelled.set()
+                raise
+
+        with patch.object(socket, "send_audio_chunk", slow_send):
+            await carrier.deliver("start", streamSid="MZ-test")
+            await socket.ready.wait()
+            await carrier.deliver("media", media={"payload": "first"})
+            await sending.wait()
+            await carrier.deliver("media", media={"payload": "last"})
+            message = (
+                WebSocketDisconnect() if ending == "disconnect" else {"event": ending}
+            )
+            await carrier.incoming.put((message, None))
+            if stalled:
+                await asyncio.wait_for(task, 2)
+                assert cancelled.is_set()
+                assert socket.audio == []
+            else:
+                # Shutdown must wait for the in-flight send and queued final chunk.
+                done, _ = await asyncio.wait({task}, timeout=0.02)
+                assert not done
+                release.set()
+                await asyncio.wait_for(task, 1)
+                assert [chunk.audio for chunk in socket.audio] == ["first", "last"]
+                assert not cancelled.is_set()
+        assert socket.finished.is_set()
+        assert socket.listening_done.is_set()
+
+    return scenario
+
+
 def test_scenario(path, scenario):
     async def run(self):
         socket = await self.exercise(path, scenario)
@@ -302,6 +345,13 @@ for example in ("03-conversation-websocket", "04-conversation-websocket-tools"):
             f"test_{example[:2]}_{scenario.__name__}",
             test_scenario(path, scenario),
         )
+    for ending in ("stop", "closed", "disconnect"):
+        for stalled in (False, True):
+            setattr(
+                StartTests,
+                f"test_{example[:2]}_drain_{ending}_stalled_{stalled}",
+                test_scenario(path, queued_audio_shutdown(ending, stalled)),
+            )
     for stage in ("connect", "config"):
         for disconnect in (False, True):
             setattr(

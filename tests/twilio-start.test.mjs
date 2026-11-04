@@ -137,9 +137,9 @@ async function bridge(
 		stop: () =>
 			handler.onMessage({ data: JSON.stringify({ event: "stop" }) }, ws),
 		emit: (message) => listeners.get("message")(message),
-		start: () =>
+		start: (streamSid = "MZ-test") =>
 			handler.onMessage(
-				{ data: JSON.stringify({ event: "start", streamSid: "MZ-test" }) },
+				{ data: JSON.stringify({ event: "start", streamSid }) },
 				ws,
 			),
 		media: (track = "inbound") =>
@@ -201,13 +201,14 @@ for (const path of [
 		const gate = deferred();
 		const b = await bridge(path, { connectGate: gate.promise });
 		await b.start();
-		await b.start();
+		await b.start("duplicate-must-not-replace-id");
 		await b.media();
 		assert.equal(b.connects, 1);
 		assert.equal(b.audio.length, 0);
 		gate.resolve();
 		await b.opened;
 		assert.equal(b.configs.length, 1);
+		assert.equal(b.carrier[0].streamSid, "MZ-test");
 		b.close();
 	});
 
@@ -215,7 +216,7 @@ for (const path of [
 		const gate = deferred();
 		const b = await bridge(path, { openGate: gate.promise });
 		await b.start();
-		await b.start();
+		await b.start("duplicate-must-not-replace-id");
 		assert.equal(b.configs.length, 0);
 		assert.deepEqual(b.carrier, []);
 		gate.resolve();

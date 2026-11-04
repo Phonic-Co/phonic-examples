@@ -94,6 +94,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 while True:
                     # Continually get audio from Twilio and send to Phonic
                     chunk = await queue.get()
+                    if chunk is None:
+                        break
                     if isinstance(chunk, AudioChunkPayload):
                         await socket.send_audio_chunk(chunk)
                     elif isinstance(chunk, ToolCallOutputPayload):
@@ -129,9 +131,16 @@ async def websocket_endpoint(websocket: WebSocket):
             # A carrier hangup is expected; finally closes the Phonic connection.
             pass
         finally:
-            process_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await process_task
+            try:
+                if conversation_created.is_set():
+                    # Preserve queued caller audio, but bound shutdown if Phonic stalls.
+                    await queue.put(None)
+                    with suppress(asyncio.TimeoutError):
+                        await asyncio.wait_for(asyncio.shield(process_task), timeout=1)
+            finally:
+                process_task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await process_task
 
     await handle_websocket()
 
